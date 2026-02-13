@@ -20,6 +20,7 @@
  */
 #pragma once
 #include <Mon3tr/Core/CoreMinimal.hpp>
+#include <Mon3tr/Core/VirtualArray.hpp>
 
 namespace mon3tr {
     namespace internal {
@@ -104,22 +105,16 @@ namespace mon3tr {
     template<typename T>
     class HandleManager final {
     public:
-        explicit HandleManager(const uint32 numInitHandleSlot = 2048ui32, const uint32 numInitReservedElements = 256ui32) {
+        explicit HandleManager(const uint32 numInitHandleSlot = 2048ui32, const uint32 numMaxElementsCapacity = 16384ui32) : dense_{numMaxElementsCapacity} {
             sparse_.resize(numInitHandleSlot);
             FillSparseSlotFreeList(0, numInitHandleSlot - 1);
             sparseFreeListNodeHead_ = 0;
-
-            dense_.reserve(numInitReservedElements);
-
-#if defined(DEBUG) || defined(_DEBUG)
-            createCallStacks_.reserve(numInitReservedElements);
-#endif
         }
 
         ~HandleManager() {
 #if defined(DEBUG) || defined(_DEBUG)
-            if (!dense_.empty()) {
-                spdlog::critical("Handle leaking founds: {}", dense_.size());
+            if (!dense_.IsEmpty()) {
+                spdlog::critical("Handle leaking founds: {}", dense_.GetSize());
                 for (const auto& callStack: createCallStacks_) {
                     for (const auto& entry: callStack) {
                         spdlog::critical("src: {}\n line: {}\n description: {}\n", entry.source_file(), entry.source_line(), entry.description());
@@ -145,9 +140,9 @@ namespace mon3tr {
             internal::SparseSlotLayout::SetVersion(targetSparseSlot, newVersion);
             internal::SparseSlotLayout::SetIsUsedSlot(targetSparseSlot, true);
             sparseFreeListNodeHead_ = internal::SparseSlotLayout::GetNextFreeListNodeIdx(targetSparseSlot);
-            internal::SparseSlotLayout::SetDenseSlotIdx(targetSparseSlot, dense_.size());
+            internal::SparseSlotLayout::SetDenseSlotIdx(targetSparseSlot, dense_.GetSize());
 
-            dense_.emplace_back(std::forward<Args>(args)...);
+            dense_.EmplaceBack(std::forward<Args>(args)...);
             derefToSparse_.emplace_back(targetSparseSlotIdx);
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -177,10 +172,10 @@ namespace mon3tr {
             }
 
             const uint32 targetDenseSlotIdx = internal::SparseSlotLayout::GetDenseSlotIdx(targetSparseSlot);
-            M3_ASSERT(targetDenseSlotIdx < dense_.size());
+            M3_ASSERT(targetDenseSlotIdx < dense_.GetSize());
             M3_ASSERT(derefToSparse_[targetDenseSlotIdx] != kInvalidSparseSlotIdx);
-            if (dense_.size() > 1) {
-                const uint32 lastDenseElementIdx = static_cast<uint32>(dense_.size()) - 1;
+            if (dense_.GetSize() > 1) {
+                const uint32 lastDenseElementIdx = static_cast<uint32>(dense_.GetSize()) - 1;
                 std::swap(dense_[targetDenseSlotIdx], dense_[lastDenseElementIdx]);
 #if defined(DEBUG) || defined(_DEBUG)
                 std::swap(createCallStacks_[targetDenseSlotIdx], createCallStacks_[lastDenseElementIdx]);
@@ -198,13 +193,13 @@ namespace mon3tr {
             internal::SparseSlotLayout::SetNextFreeListNodeIdx(targetSparseSlot, sparseFreeListNodeHead_);
             sparseFreeListNodeHead_ = targetSparseSlotIdx;
 
-            dense_.pop_back();
+            dense_.PopBack();
             derefToSparse_.pop_back();
-            M3_POST_COND(dense_.size() == derefToSparse_.size());
+            M3_POST_COND(dense_.GetSize() == derefToSparse_.size());
 
 #if defined(DEBUG) || defined(_DEBUG)
             createCallStacks_.pop_back();
-            M3_POST_COND(dense_.size() == createCallStacks_.size());
+            M3_POST_COND(dense_.GetSize() == createCallStacks_.size());
 #endif
         }
 
@@ -225,7 +220,7 @@ namespace mon3tr {
             }
 
             const uint32 denseSlotIdx = internal::SparseSlotLayout::GetDenseSlotIdx(sparseSlot);
-            M3_ASSERT(denseSlotIdx < dense_.size());
+            M3_ASSERT(denseSlotIdx < dense_.GetSize());
             M3_ASSERT(derefToSparse_[denseSlotIdx] != kInvalidSparseSlotIdx);
             return &dense_[denseSlotIdx];
         }
@@ -262,7 +257,7 @@ namespace mon3tr {
 
         std::vector<uint64> sparse_;
         std::vector<uint32> derefToSparse_;
-        std::vector<T>      dense_;
+        VirtualArray<T>     dense_;
 
         uint32 sparseFreeListNodeHead_ = kInvalidFreeListNodeIdx;
 
