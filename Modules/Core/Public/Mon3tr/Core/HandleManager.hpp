@@ -131,6 +131,11 @@ namespace mon3tr {
                 GrowSparseSlots();
             }
 
+            const bool bDenseAllocSuccess = dense_.EmplaceBack(std::forward<Args>(args)...);
+            if (!bDenseAllocSuccess) {
+                return Handle<T>{};
+            }
+
             const uint32 targetSparseSlotIdx = sparseFreeListNodeHead_;
             M3_ASSERT(targetSparseSlotIdx < sparse_.size());
             uint64& targetSparseSlot = sparse_[targetSparseSlotIdx];
@@ -140,9 +145,7 @@ namespace mon3tr {
             internal::SparseSlotLayout::SetVersion(targetSparseSlot, newVersion);
             internal::SparseSlotLayout::SetIsUsedSlot(targetSparseSlot, true);
             sparseFreeListNodeHead_ = internal::SparseSlotLayout::GetNextFreeListNodeIdx(targetSparseSlot);
-            internal::SparseSlotLayout::SetDenseSlotIdx(targetSparseSlot, dense_.GetSize());
-
-            dense_.EmplaceBack(std::forward<Args>(args)...);
+            internal::SparseSlotLayout::SetDenseSlotIdx(targetSparseSlot, dense_.GetSize() - 1);
             derefToSparse_.emplace_back(targetSparseSlotIdx);
 
 #if defined(DEBUG) || defined(_DEBUG)
