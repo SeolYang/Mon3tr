@@ -68,12 +68,6 @@ FetchContent_Declare(
         GIT_TAG v4.1.4
 )
 
-FetchContent_Declare(
-        DirectXTK12
-        GIT_REPOSITORY  https://github.com/microsoft/DirectXTK12.git
-        GIT_TAG oct2025
-)
-
 add_definitions(-DTF_DISABLE_EXCEPTION_HANDLING)
 set(TF_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(TF_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -108,7 +102,16 @@ FetchContent_Declare(
         GIT_TAG v4.8.1
 )
 
-FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs DirectXTK12 taskflow tracy JoltPhysics SDL unordered_dense)
+FetchContent_Declare(
+  directxmath
+  GIT_REPOSITORY https://github.com/microsoft/DirectXMath.git
+  GIT_TAG        apr2025
+)
+
+FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs taskflow tracy JoltPhysics SDL unordered_dense directxmath)
+
+# Third-party
+add_subdirectory(Thirdparty/SimpleMath)
 
 # Modules & Sub-projects
 add_subdirectory(Modules/Core)

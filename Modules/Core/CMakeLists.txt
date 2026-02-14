@@ -38,6 +38,7 @@ target_link_libraries(Mon3trCore PUBLIC
         unordered_dense::unordered_dense
         Tracy::TracyClient
         Taskflow::Taskflow
+        SimpleMath
 
         PRIVATE
         SDL3::SDL3

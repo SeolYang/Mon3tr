@@ -23,8 +23,6 @@
 #include <Mon3tr/Core/HandleManager.hpp>
 #include <Mon3tr/Core/VirtualArray.hpp>
 
-#include "../../ThirdParty/directxtk12-src/Inc/DirectXHelpers.h"
-
 int main() {
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     auto logger = std::make_shared<spdlog::logger>("console", console_sink);

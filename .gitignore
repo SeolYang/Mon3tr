@@ -40,5 +40,9 @@
 # debug information files
 *.dwo
 
+\.vs
 \.idea
-ThirdParty
+ThirdParty/*
+!ThirdParty/SimpleMath
+out/*
+CMakeSettings.json

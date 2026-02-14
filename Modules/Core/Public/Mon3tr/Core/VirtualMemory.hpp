@@ -24,12 +24,16 @@
 #include <Mon3tr/Core/Platform.hpp>
 
 namespace mon3tr {
-    // Reference about PAGE_XXXX constants & WIN32 Virtual Mem API
-    // https://learn.microsoft.com/en-us/windows/win32/memory/memory-protection-constants
-    // https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc
+    /*
+    * Reference about PAGE_XXXX constants & WIN32 Virtual Mem API
+    * https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc
+    * https://learn.microsoft.com/en-us/windows/win32/memory/memory-protection-constants
+    */
     class VirtualMemory {
     public:
         static void* Reserve(const uint64 sizeBytes) {
+            M3_PRE_COND(sizeBytes > 0);
+
             void* memPtr = nullptr;
 #ifdef M3_PLATFORM_WINDOWS
             memPtr = VirtualAlloc(nullptr, sizeBytes, MEM_RESERVE, PAGE_NOACCESS);
@@ -51,6 +55,7 @@ namespace mon3tr {
 
         static void Free(void* memPtr) {
             if (memPtr == nullptr) {
+                M3_ASSERT(false);
                 return;
             }
 
