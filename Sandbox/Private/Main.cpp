@@ -22,6 +22,10 @@
 #include <Mon3tr/Core/CoreMinimal.hpp>
 #include <Mon3tr/Core/HandleManager.hpp>
 #include <Mon3tr/Core/VirtualArray.hpp>
+#include <Mon3tr/Core/Log.hpp>
+
+M3_DECLARE_LOG_CATEGORY(TestLog);
+M3_DEFINE_LOG_CATEGORY(TestLog);
 
 int main() {
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -67,6 +71,8 @@ int main() {
     vArray.Clear();
     M3_ASSERT(vArray.GetSize() == 0);
     M3_ASSERT(vArray.IsEmpty());
+
+    M3_LOG(TestLog, Trace, "test {}", 25);
 
     return 0;
 }

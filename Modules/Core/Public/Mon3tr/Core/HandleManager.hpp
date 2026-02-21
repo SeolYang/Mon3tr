@@ -114,10 +114,10 @@ namespace mon3tr {
         ~HandleManager() {
 #if defined(DEBUG) || defined(_DEBUG)
             if (!dense_.IsEmpty()) {
-                spdlog::critical("Handle leaking founds: {}", dense_.GetSize());
+                //spdlog::critical("Handle leaking founds: {}", dense_.GetSize());
                 for (const auto& callStack: createCallStacks_) {
                     for (const auto& entry: callStack) {
-                        spdlog::critical("src: {}\n line: {}\n description: {}\n", entry.source_file(), entry.source_line(), entry.description());
+                        //spdlog::critical("src: {}\n line: {}\n description: {}\n", entry.source_file(), entry.source_line(), entry.description());
                     }
                 }
                 M3_ASSERT(false);

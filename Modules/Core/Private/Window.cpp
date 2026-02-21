@@ -18,46 +18,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+#include <Mon3tr/Core/Window.hpp>
 
-/* Standard Libs */
-#include <string>
-#include <string_view>
-#include <vector>
-#include <span>
-#include <algorithm>
-#include <memory>
-#include <thread>
-#include <cstdint>
-#include <filesystem>
-#include <functional>
-#include <tuple>
-#include <stack>
-#include <queue>
-#include <stacktrace>
-#include <type_traits>
-#include <concepts>
-#include <expected>
-
-/* Internal */
-#include <Mon3tr/Core/Assertion.hpp>
-#include <Mon3tr/Core/Types.hpp>
-#include <Mon3tr/Core/Version.hpp>
-#include <Mon3tr/Core/Memory.hpp>
-#include <Mon3tr/Core/Platform.hpp>
-#include <Mon3tr/Core/Handle.hpp>
-
-/* External Libs */
-#pragma warning(push, 0)
-#pragma warning(disable : 4996)
-#include <cereal/cereal.hpp>
-#include <simdutf.h>
-#include <magic_enum/magic_enum.hpp>
-#include <flecs.h>
-#include <ankerl/unordered_dense.h>
-#include <TaskScheduler.h>
-#include <vfspp/VFS.h>
-#include <SDL3/SDL.h>
-#pragma warning(pop)
+namespace mon3tr {
+}

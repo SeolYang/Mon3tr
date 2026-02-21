@@ -4,12 +4,14 @@ target_include_directories(
         Mon3trCore
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/Public
+        ${enkits_SOURCE_DIR}/src
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/Private
 )
 
 set(Mon3trCorePrivate
-        Private/CoreMinimal.cpp)
+        Private/CoreMinimal.cpp
+        Private/Window.cpp)
 set(Mon3trCorePublic
         Public/Mon3tr/Core/Assertion.hpp
         Public/Mon3tr/Core/CoreMinimal.hpp
@@ -20,7 +22,8 @@ set(Mon3trCorePublic
         Public/Mon3tr/Core/Types.hpp
         Public/Mon3tr/Core/Version.hpp
         Public/Mon3tr/Core/VirtualArray.hpp
-        Public/Mon3tr/Core/VirtualMemory.hpp)
+        Public/Mon3tr/Core/VirtualMemory.hpp
+        Public/Mon3tr/Core/Window.hpp)
 
 target_sources(Mon3trCore PRIVATE
         ${Mon3trCorePrivate})
@@ -37,10 +40,9 @@ target_link_libraries(Mon3trCore PUBLIC
         flecs::flecs
         unordered_dense::unordered_dense
         Tracy::TracyClient
-        Taskflow::Taskflow
         SimpleMath
-
-        PRIVATE
+        enkiTS
+        vfspp::vfspp
         SDL3::SDL3
 )
 

@@ -45,7 +45,7 @@ namespace mon3tr {
 
         static bool Commit(void* memPtr, const uint64 sizeBytes) {
 #ifdef M3_PLATFORM_WINDOWS
-            void* result = VirtualAlloc(memPtr, sizeBytes, MEM_COMMIT, PAGE_READWRITE);
+            const void* result = VirtualAlloc(memPtr, sizeBytes, MEM_COMMIT, PAGE_READWRITE);
             return result != nullptr;
 #else
             M3_UNIMPLEMENTED();
