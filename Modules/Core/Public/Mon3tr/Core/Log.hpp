@@ -66,7 +66,7 @@ namespace mon3tr {
     private:
         LogSystem() : consoleSink_(std::make_shared<spdlog::sinks::stdout_color_sink_mt>(spdlog::color_mode::always))
                     , fileSink_(std::make_shared<spdlog::sinks::basic_file_sink_mt>("log.txt", true)) {
-            constexpr std::string_view kFormatHeaderPattern = "[%Y-%m-%d %H:%M:%S] [%n]  %^%v%$";
+            constexpr std::string_view kFormatHeaderPattern = "[%l] [%Y-%m-%d %H:%M:%S] [%n]  %^%v%$";
             consoleSink_->set_pattern(kFormatHeaderPattern.data());
             fileSink_->set_pattern(kFormatHeaderPattern.data());
         }
@@ -78,7 +78,7 @@ namespace mon3tr {
 }
 
 /**
- * @brief 로그 시스템에 등록할 카테고리 이름을 선언합니다.
+ * @brief 로그 시스템에 등록할 카테고리 이름을 선언합니다. 정의와 한 쌍으로 사용됩니다.
  * @warning 글로벌 네임스페이스에 카테고리 선언 매크로가 위치하여야 합니다.
  * @param CATEGORY 선언할 카테고리의 이름
  */
@@ -111,6 +111,12 @@ namespace mon3tr::internal::log::CATEGORY { \
     } \
 }
 
+/**
+ * @brief 로그 시스템에 등록할 카테고리 이름을 정의합니다. 선언과 한 쌍으로 사용됩니다.
+ * 전체 스코프에서 단 하나의 Translation Unit에서 정의되어야 합니다.
+ * @warning 글로벌 네임스페이스에 카테고리 선언 매크로가 위치하여야 합니다.
+ * @param CATEGORY 선언할 카테고리의 이름
+ */
 #define M3_DEFINE_LOG_CATEGORY(CATEGORY) \
 namespace mon3tr::internal::log::CATEGORY { \
     spdlog::logger* GetLogger() { \
