@@ -120,4 +120,7 @@ namespace mon3tr::internal::log::CATEGORY { \
 }
 
 #define M3_LOG(CATEGORY, VERBOSITY, MESSAGE, ...) \
-mon3tr::internal::log::CATEGORY::Log<mon3tr::ELogVerbosity::VERBOSITY>(MESSAGE, __VA_OPT__(,) __VA_ARGS__);
+mon3tr::internal::log::CATEGORY::Log<mon3tr::ELogVerbosity::VERBOSITY>(MESSAGE __VA_OPT__(,) __VA_ARGS__);
+
+
+M3_DECLARE_LOG_CATEGORY(LogTemp)
