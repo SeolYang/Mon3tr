@@ -15,6 +15,7 @@ if (MSVC)
     add_compile_options(
             "/EHs-"
             "/EHc-"
+            "/Zc:preprocessor"
     )
     add_definitions(-D_HAS_EXCEPTIONS=0)
 

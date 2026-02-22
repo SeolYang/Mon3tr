@@ -20,5 +20,55 @@
  */
 #include <Mon3tr/Core/Window.hpp>
 
+M3_DEFINE_LOG_CATEGORY(Window);
+
 namespace mon3tr {
+    EWindowInitializeResult Window::Initialize(const WindowDesc& desc) {
+        if (!SDL_Init(SDL_INIT_VIDEO)) {
+            M3_LOG(Window, Fatal, "Failed to initialize SDL: {}", SDL_GetError());
+            return EWindowInitializeResult::SDLInitializationFailed;
+        }
+
+        int32 targetWidth = desc.Width;
+        int32 targetHeight = desc.Height;
+
+        if (targetWidth <= 0 || targetHeight <= 0) {
+            int                  numDisplays = 0;
+            const SDL_DisplayID* displayIds = SDL_GetDisplays(&numDisplays);
+
+            if (displayIds == nullptr || numDisplays == 0) {
+                targetWidth = kWindowWidthFallback;
+                targetHeight = kWindowHeightFallback;
+            } else {
+                const SDL_DisplayMode* currentDisplayMode = SDL_GetCurrentDisplayMode(displayIds[0]);
+                targetWidth = currentDisplayMode->w;
+                targetHeight = currentDisplayMode->h;
+            }
+        }
+
+        SDL_WindowFlags windowFlags = 0;
+        windowFlags |= desc.bBorderless ? SDL_WINDOW_BORDERLESS : 0;
+        bIsBorderless_ = desc.bBorderless;
+        windowFlags |= desc.bFullscreen ? SDL_WINDOW_FULLSCREEN : 0;
+        bIsFullscreen_ = desc.bFullscreen;
+
+        SDL_Window* window = SDL_CreateWindow(desc.Title.data(), targetWidth, targetHeight, windowFlags);
+        if (window == nullptr) {
+            M3_LOG(Window, Fatal, "Failed to create window: {}", SDL_GetError());
+            return EWindowInitializeResult::SDLWindowCreationFailed;
+        }
+        window_ = window;
+
+        MarkAsInitialized();
+        return EWindowInitializeResult::Success;
+    }
+
+    void Window::Shutdown() {
+        if (window_ != nullptr) {
+            SDL_DestroyWindow(window_);
+            window_ = nullptr;
+        }
+
+        System::Shutdown();
+    }
 }

@@ -20,43 +20,54 @@
  */
 #pragma once
 #include <Mon3tr/Core/CoreMinimal.hpp>
+#include <Mon3tr/Core/System.hpp>
+
+M3_DECLARE_LOG_CATEGORY(Window)
 
 namespace mon3tr {
     /**
      * @brief The description struct for initialize/create a window instance.
      */
     struct WindowDesc {
-        std::string_view Title = "Mon3tr"; ///< 생성될 윈도우 창의 타이틀(제목)
-        uint16 Width = 0;  ///< 생성될 윈도우 창의 가로 해상도(Pixel). 만약 0이라면 선택 가능한 가장 큰 해상도를 사용.
-        uint16 Height = 0; ///< 생성될 윈도우 창의 세로 해상도(Pixel). 만약 0이라면 선택 가능한 가장 큰 해상도를 사용.
-        bool bFullscreen = false; ///< 생성될 윈도우 창이 전체화면으로 생성 될지 설정.
-        bool bBorderless = false; ///< 생성될 윈도우 창이 테두리없는 창일지 결정.
+        std::string_view Title = "Mon3tr";    ///< 생성될 윈도우 창의 타이틀(제목)
+        int32            Width = 0;           ///< 생성될 윈도우 창의 가로 해상도(Pixel). 만약 너비/높이 두 값중 하나라도 val <= 0이라면 선택 가능한 현재 모니터의 해상도를 사용.
+        int32            Height = 0;          ///< 생성될 윈도우 창의 세로 해상도(Pixel). 만약 너비/높이 두 값중 하나라도 val <= 0이라면 선택 가능한 현재 모니터의 해상도를 사용.
+        bool             bFullscreen = false; ///< 생성될 윈도우 창이 전체화면으로 생성 될지 설정.
+        bool             bBorderless = false; ///< 생성될 윈도우 창이 테두리없는 창일지 결정.
     };
 
-    class Window {
+    enum class EWindowInitializeResult {
+        SDLInitializationFailed,
+        SDLWindowCreationFailed,
+        Success,
+    };
+
+    class Window : public System {
     public:
-        explicit Window(WindowDesc desc);
+        Window() = default;
 
-        ~Window();
+        ~Window() override = default;
 
-        Window(Window const&) = delete;
+        [[nodiscard]] int32 GetWidth() const noexcept { return width_; }
+        [[nodiscard]] int32 GetHeight() const noexcept { return height_; }
+        [[nodiscard]] bool  IsFullscreen() const noexcept { return bIsFullscreen_; }
+        [[nodiscard]] bool  IsBorderless() const noexcept { return bIsBorderless_; }
+        [[nodiscard]] bool  IsResized() const noexcept { return bIsResized_; }
 
-        Window& operator=(Window const&) = delete;
+        EWindowInitializeResult Initialize(const WindowDesc& desc);
 
-        Window(Window&&) = delete;
-
-        Window& operator=(Window&&) = delete;
-
-        [[nodiscard]] uint16 GetWidth() const noexcept { return width_; }
-        [[nodiscard]] uint16 GetHeight() const noexcept { return height_; }
-        [[nodiscard]] bool IsFullscreen() const noexcept { return bIsFullscreen_; }
-        [[nodiscard]] bool IsBorderless() const noexcept { return bIsBorderless_;}
+        void Shutdown() override;
 
     private:
-        uint16 width_ = 0;
-        uint16 height_ = 0;
-        bool bIsFullscreen_ = false;
-        bool bIsBorderless_ = false;
+        constexpr static int32 kWindowWidthFallback = 1280;
+        constexpr static int32 kWindowHeightFallback = 720;
+
+        int32 width_ = 0;
+        int32 height_ = 0;
+        bool  bIsFullscreen_ = false;
+        bool  bIsBorderless_ = false;
+
+        bool bIsResized_ = false;
 
         SDL_Window* window_ = nullptr;
     };

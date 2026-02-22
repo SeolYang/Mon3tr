@@ -24,7 +24,9 @@
 namespace mon3tr {
     class System {
     public:
-        virtual ~System() { M3_ASSERT(bIsInitialized_); }
+        virtual ~System() {
+            M3_ASSERT(!bIsInitialized_);
+        }
 
         System(const System&) = delete;
 

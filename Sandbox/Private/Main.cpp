@@ -23,6 +23,7 @@
 #include <Mon3tr/Core/HandleManager.hpp>
 #include <Mon3tr/Core/VirtualArray.hpp>
 #include <Mon3tr/Core/Log.hpp>
+#include <Mon3tr/Core/Window.hpp>
 
 M3_DECLARE_LOG_CATEGORY(TestLog);
 M3_DEFINE_LOG_CATEGORY(TestLog);
@@ -74,5 +75,9 @@ int main() {
 
     M3_LOG(TestLog, Trace, "test {}", 25);
 
+    m3::Window testWindow{};
+    testWindow.Initialize(m3::WindowDesc{.Title = "test", .Width = 1920, .Height = 1080, .bBorderless = true});
+    testWindow.Shutdown();
+    SDL_Quit();
     return 0;
 }
