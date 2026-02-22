@@ -48,6 +48,8 @@
 #include <Mon3tr/Core/Memory.hpp>
 #include <Mon3tr/Core/Platform.hpp>
 #include <Mon3tr/Core/Handle.hpp>
+#include <Mon3tr/Core/System.hpp>
+#include <Mon3tr/Core/Log.hpp>
 
 /* External Libs */
 #pragma warning(push, 0)
