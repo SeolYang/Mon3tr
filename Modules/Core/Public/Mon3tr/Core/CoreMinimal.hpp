@@ -50,6 +50,7 @@
 #include <Mon3tr/Core/Handle.hpp>
 #include <Mon3tr/Core/System.hpp>
 #include <Mon3tr/Core/Log.hpp>
+namespace m3 = mon3tr;
 
 /* External Libs */
 #pragma warning(push, 0)
