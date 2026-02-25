@@ -105,7 +105,15 @@ FetchContent_Declare(
         vfspp
         GIT_REPOSITORY https://github.com/nextgeniuspro/vfspp.git
         GIT_TAG v2.1.1
-        SYSTEM
+)
+
+set(NVRHI_WITH_D3D11 OFF CACHE BOOL "" FORCE)
+set(NVRHI_WITH_D3D12 ON CACHE BOOL "" FORCE)
+set(NVRHI_WITH_VULKAN ON CACHE BOOL "" FORCE)
+FetchContent_Declare(
+        nvrhi
+        GIT_REPOSITORY https://github.com/NVIDIA-RTX/NVRHI.git
+        GIT_TAG 2ac4b58c355f53827c2e1d0740849ce4d09d5dd6
 )
 
 set(ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -116,11 +124,12 @@ FetchContent_Declare(
         GIT_TAG v1.11
 )
 
-FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp enkiTS)
+FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp enkiTS nvrhi)
 
 # Third-party
 add_subdirectory(Thirdparty/SimpleMath)
 
 # Modules & Sub-projects
 add_subdirectory(Modules/Core)
+add_subdirectory(Modules/Render)
 add_subdirectory(Sandbox)

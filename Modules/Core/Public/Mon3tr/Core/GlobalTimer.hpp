@@ -32,7 +32,6 @@ namespace mon3tr {
     public:
         ~GlobalTimer() = default;
 
-        // 싱글톤 복사/대입 방지
         GlobalTimer(const GlobalTimer&) = delete;
 
         GlobalTimer& operator=(const GlobalTimer&) = delete;

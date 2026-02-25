@@ -12,11 +12,13 @@ target_include_directories(
 set(Mon3trCorePrivate
         Private/CoreMinimal.cpp
         Private/Log.cpp
+        Private/HandleManager.cpp
         Private/Window.cpp
         Private/GlobalTimer.cpp)
 set(Mon3trCorePublic
         Public/Mon3tr/Core/Assertion.hpp
         Public/Mon3tr/Core/CoreMinimal.hpp
+        Public/Mon3tr/Core/Log.hpp
         Public/Mon3tr/Core/Handle.hpp
         Public/Mon3tr/Core/HandleManager.hpp
         Public/Mon3tr/Core/Memory.hpp
@@ -25,7 +27,6 @@ set(Mon3trCorePublic
         Public/Mon3tr/Core/Version.hpp
         Public/Mon3tr/Core/VirtualArray.hpp
         Public/Mon3tr/Core/VirtualMemory.hpp
-        Public/Mon3tr/Core/Log.hpp
         Public/Mon3tr/Core/System.hpp
         Public/Mon3tr/Core/Window.hpp
         Public/Mon3tr/Core/GlobalTimer.hpp)
