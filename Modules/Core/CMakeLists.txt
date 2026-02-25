@@ -12,7 +12,8 @@ target_include_directories(
 set(Mon3trCorePrivate
         Private/CoreMinimal.cpp
         Private/Log.cpp
-        Private/Window.cpp)
+        Private/Window.cpp
+        Private/GlobalTimer.cpp)
 set(Mon3trCorePublic
         Public/Mon3tr/Core/Assertion.hpp
         Public/Mon3tr/Core/CoreMinimal.hpp
@@ -26,7 +27,8 @@ set(Mon3trCorePublic
         Public/Mon3tr/Core/VirtualMemory.hpp
         Public/Mon3tr/Core/Log.hpp
         Public/Mon3tr/Core/System.hpp
-        Public/Mon3tr/Core/Window.hpp)
+        Public/Mon3tr/Core/Window.hpp
+        Public/Mon3tr/Core/GlobalTimer.hpp)
 
 target_sources(Mon3trCore PRIVATE
         ${Mon3trCorePrivate})

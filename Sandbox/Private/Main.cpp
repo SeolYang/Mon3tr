@@ -24,6 +24,7 @@
 #include <Mon3tr/Core/VirtualArray.hpp>
 #include <Mon3tr/Core/Log.hpp>
 #include <Mon3tr/Core/Window.hpp>
+#include <Mon3tr/Core/GlobalTimer.hpp>
 
 M3_DECLARE_LOG_CATEGORY(TestLog);
 M3_DEFINE_LOG_CATEGORY(TestLog);
@@ -74,6 +75,11 @@ int main() {
     M3_ASSERT(vArray.IsEmpty());
 
     M3_LOG(TestLog, Trace, "test {}", 25);
+
+    mon3tr::GlobalTimer::GetInstance().BeginNewFrame();
+    std::this_thread::sleep_for(std::chrono::milliseconds(550));
+    mon3tr::GlobalTimer::GetInstance().BeginNewFrame();
+    M3_LOG(TestLog, Trace, "DT: {}, {}", m3::GlobalTimer::GetInstance().GetDeltaTimeMilli(), m3::GlobalTimer::GetInstance().GetDeltaTime());
 
     m3::Window testWindow{};
     testWindow.Initialize(m3::WindowDesc{.Title = "test", .Width = 1920, .Height = 1080, .bBorderless = true});
