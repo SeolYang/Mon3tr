@@ -22,6 +22,8 @@
 #include <Mon3tr/Core/CoreMinimal.hpp>
 #include <Mon3tr/Core/VirtualArray.hpp>
 
+M3_DECLARE_LOG_CATEGORY(HandleManager)
+
 namespace mon3tr {
     namespace internal {
         struct SparseSlotLayout {
@@ -114,10 +116,10 @@ namespace mon3tr {
         ~HandleManager() {
 #if defined(DEBUG) || defined(_DEBUG)
             if (!dense_.IsEmpty()) {
-                //spdlog::critical("Handle leaking founds: {}", dense_.GetSize());
+                M3_LOG(HandleManager, Warning, "Handle leaking founds: {}", dense_.GetSize());
                 for (const auto& callStack: createCallStacks_) {
                     for (const auto& entry: callStack) {
-                        //spdlog::critical("src: {}\n line: {}\n description: {}\n", entry.source_file(), entry.source_line(), entry.description());
+                        M3_LOG(HandleManager, Warning, "Src: {}\n Line: {}\n Description: {}\n", entry.source_file(), entry.source_line(), entry.description());
                     }
                 }
                 M3_ASSERT(false);
@@ -145,7 +147,7 @@ namespace mon3tr {
             internal::SparseSlotLayout::SetVersion(targetSparseSlot, newVersion);
             internal::SparseSlotLayout::SetIsUsedSlot(targetSparseSlot, true);
             sparseFreeListNodeHead_ = internal::SparseSlotLayout::GetNextFreeListNodeIdx(targetSparseSlot);
-            internal::SparseSlotLayout::SetDenseSlotIdx(targetSparseSlot, dense_.GetSize() - 1);
+            internal::SparseSlotLayout::SetDenseSlotIdx(targetSparseSlot, static_cast<uint32>(dense_.GetSize()) - 1);
             derefToSparse_.emplace_back(targetSparseSlotIdx);
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -237,10 +239,11 @@ namespace mon3tr {
             M3_PRE_COND(sparseFreeListNodeHead_ == kInvalidFreeListNodeIdx);
 
             const uint64 oldSparseSlotSize = sparse_.size();
+            M3_ASSERT(oldSparseSlotSize < std::numeric_limits<uint32>::max());
             sparse_.resize(oldSparseSlotSize + (oldSparseSlotSize / 2));
             FillSparseSlotFreeList(oldSparseSlotSize, sparse_.size() - 1);
 
-            sparseFreeListNodeHead_ = oldSparseSlotSize;
+            sparseFreeListNodeHead_ = static_cast<uint32>(oldSparseSlotSize);
         }
 
         void FillSparseSlotFreeList(const uint64 beginSparseSlotIdx, const uint64 endSparseSlotIdx) {
@@ -248,7 +251,9 @@ namespace mon3tr {
             M3_PRE_COND(beginSparseSlotIdx < sparse_.size());
 
             for (uint64 idx = beginSparseSlotIdx; idx <= endSparseSlotIdx; ++idx) {
-                internal::SparseSlotLayout::SetNextFreeListNodeIdx(sparse_[idx], (idx == endSparseSlotIdx) ? kInvalidFreeListNodeIdx : idx + 1);
+                M3_ASSERT(idx < std::numeric_limits<uint32>::max());
+                internal::SparseSlotLayout::SetNextFreeListNodeIdx(
+                    sparse_[idx], (idx == endSparseSlotIdx) ? kInvalidFreeListNodeIdx : static_cast<uint32>(idx) + 1);
                 internal::SparseSlotLayout::SetVersion(sparse_[idx], 0);
                 internal::SparseSlotLayout::SetIsUsedSlot(sparse_[idx], false);
             }
