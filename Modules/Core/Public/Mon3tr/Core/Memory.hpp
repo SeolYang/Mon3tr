@@ -23,6 +23,14 @@
 #include <Mon3tr/Core/Types.hpp>
 
 namespace mon3tr {
+    template <typename T>
+    using Ptr = std::unique_ptr<T>;
+
+    template <typename T, typename... Args>
+    auto MakePtr(Args&&... args) {
+        return std::make_unique<T>(std::forward<Args>(args)...);
+    }
+
     template<typename T>
     constexpr bool IsPowerOf2(T x) noexcept { return ((x != 0) && !(x & (x - 1))); }
 
