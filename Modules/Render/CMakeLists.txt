@@ -23,6 +23,10 @@ target_sources(Mon3trRender PUBLIC
 target_link_libraries(Mon3trRender PUBLIC
         Mon3trCore
         nvrhi
+        nvrhi_d3d12
+        nvrhi_vk
+
+        dxgi.lib
 )
 
 target_compile_options(Mon3trRender PRIVATE
