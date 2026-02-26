@@ -37,14 +37,14 @@ int main() {
     namespace m3 = mon3tr;
     m3::HandleManager<int> test;
 
-    const m3::Handle<int> handle = test.Create(35);
+    m3::Handle<int> handle = test.Create(35);
     static_assert(sizeof(m3::Handle<int>) == sizeof(m3::uint64));
     M3_ASSERT(!handle.IsNull());
 
     int* ptr = test.GetMutable(handle);
     M3_ASSERT(ptr != nullptr);
     M3_ASSERT(*ptr == 35);
-    test.Destroy(handle);
+    M3_SAFE_HANDLE_DESTROY(test, handle);
 
     M3_ASSERT(mon3tr::AlignUp(3, 1024) == 1024);
 

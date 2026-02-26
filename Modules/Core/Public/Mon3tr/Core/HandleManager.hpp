@@ -274,3 +274,7 @@ namespace mon3tr {
 #endif
     };
 }
+
+#define M3_SAFE_HANDLE_DESTROY(HANDLE_MANAGER_INSTANCE, HANDLE) \
+    HANDLE_MANAGER_INSTANCE.Destroy(HANDLE); \
+    HANDLE.Raw = mon3tr::internal::kNullRawHandle
