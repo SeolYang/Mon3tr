@@ -22,6 +22,13 @@
 #include <nvrhi/nvrhi.h>
 #include <nvrhi/validation.h>
 
+#if defined(M3_PLATFORM_WINDOWS)
+#include <nvrhi/d3d12.h>
+#include <dxgi1_6.h>
+#include <dxgidebug.h>
+#include <d3d12sdklayers.h>
+#endif
+
 namespace mon3tr::render {
     using EFormat = nvrhi::Format;
     using EGraphicsAPI = nvrhi::GraphicsAPI;
