@@ -71,4 +71,24 @@ namespace mon3tr {
 
         System::Shutdown();
     }
+
+    void* Window::GetNative() {
+        if (window_ == nullptr) {
+            M3_ASSERT(false);
+            return nullptr;
+        }
+
+        const SDL_PropertiesID props = SDL_GetWindowProperties(window_);
+        void*                  nativeHandle = nullptr;
+#ifdef M3_PLATFORM_WINDOWS
+        nativeHandle = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+#else
+        M3_UNIMPLEMENTED();
+#endif
+        if (nativeHandle == nullptr) {
+            M3_LOG(Window, Warning, "Failed to get native handle pointer from sdl. {}", SDL_GetError());
+        }
+
+        return nativeHandle;
+    }
 }

@@ -58,6 +58,8 @@ namespace mon3tr {
 
         void Shutdown() override;
 
+        void* GetNative();
+
     private:
         constexpr static int32 kWindowWidthFallback = 1280;
         constexpr static int32 kWindowHeightFallback = 720;
