@@ -14,7 +14,8 @@ set(Mon3trCorePrivate
         Private/Log.cpp
         Private/HandleManager.cpp
         Private/Window.cpp
-        Private/GlobalTimer.cpp)
+        Private/GlobalTimer.cpp
+        Private/Memory.cpp)
 set(Mon3trCorePublic
         Public/Mon3tr/Core/Assertion.hpp
         Public/Mon3tr/Core/CoreMinimal.hpp
@@ -29,6 +30,7 @@ set(Mon3trCorePublic
         Public/Mon3tr/Core/VirtualMemory.hpp
         Public/Mon3tr/Core/System.hpp
         Public/Mon3tr/Core/Window.hpp
+        Public/Mon3tr/Core/Profiler.hpp
         Public/Mon3tr/Core/GlobalTimer.hpp)
 
 target_sources(Mon3trCore PRIVATE
@@ -50,6 +52,8 @@ target_link_libraries(Mon3trCore PUBLIC
         enkiTS
         vfspp::vfspp
         SDL3::SDL3
+        EASTL
+        snmalloc
 )
 
 target_compile_options(Mon3trCore PRIVATE

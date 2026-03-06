@@ -19,50 +19,14 @@
  * SOFTWARE.
  */
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-
-/* Standard Libs */
-#include <string>
-#include <string_view>
-#include <vector>
-#include <span>
-#include <algorithm>
-#include <memory>
-#include <thread>
-#include <cstdint>
-#include <filesystem>
-#include <functional>
-#include <tuple>
-#include <stack>
-#include <queue>
-#include <stacktrace>
-#include <type_traits>
-#include <concepts>
-#include <expected>
-#include <shared_mutex>
-
-/* Internal */
-#include <Mon3tr/Core/Assertion.hpp>
-#include <Mon3tr/Core/Types.hpp>
-#include <Mon3tr/Core/Version.hpp>
-#include <Mon3tr/Core/Memory.hpp>
-#include <Mon3tr/Core/Platform.hpp>
-#include <Mon3tr/Core/Handle.hpp>
-#include <Mon3tr/Core/System.hpp>
-#include <Mon3tr/Core/Log.hpp>
-#include <Mon3tr/Core/Profiler.hpp>
-namespace m3 = mon3tr;
-
-/* External Libs */
-#pragma warning(push, 0)
-#pragma warning(disable : 4996)
-#include <cereal/cereal.hpp>
-#include <simdutf.h>
-#include <magic_enum/magic_enum.hpp>
-#include <flecs.h>
-#include <ankerl/unordered_dense.h>
-#include <TaskScheduler.h>
-#include <vfspp/VFS.h>
-#include <SDL3/SDL.h>
+#pragma warning(push)
+#pragma warning(disable : 26495)
+#pragma warning(disable : 6201)
+// @todo Debug~ReleaseWithDebug => Enable, Release => Optional
+//#ifdef M3_ENABLE_PROFILING
+#ifndef TRACY_ENABLE
+#define TRACY_ENABLE
+#endif
+//#endif
+#include <tracy/Tracy.hpp>
 #pragma warning(pop)

@@ -124,7 +124,20 @@ FetchContent_Declare(
         GIT_TAG v1.11
 )
 
-FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp enkiTS nvrhi)
+FetchContent_Declare(
+        EASTL
+        GIT_REPOSITORY https://github.com/electronicarts/EASTL.git
+        GIT_TAG 3.27.01
+)
+
+set(SNMALLOC_STATIC_LIBRARY ON CACHE BOOL "" FORCE)
+FetchContent_Declare(
+        snmalloc
+        GIT_REPOSITORY https://github.com/microsoft/snmalloc.git
+        GIT_TAG 0.7.3
+)
+
+FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp enkiTS nvrhi EASTL snmalloc)
 
 # Third-party
 add_subdirectory(Thirdparty/SimpleMath)
