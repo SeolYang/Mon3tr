@@ -42,6 +42,8 @@ std::atomic<mon3tr::uint64> MEM_CATEGORY::AllocationSize = 0; \
 M3_DECLARE_MEM_CATEGORY(Unspecified)
 
 namespace mon3tr {
+    constexpr uint64 kCacheLineSize = 64;
+
     template<typename Category>
     concept MemoryCategory = requires()
     {
@@ -61,6 +63,16 @@ namespace mon3tr {
         uint64 GetAllocationSize(const void* ptr);
     }
 
+    template<MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
+    void* Allocate(const uint64 size, const uint64 alignment) {
+        void* ptr = internal::Allocate(size, alignment, C::Name);
+        if (ptr != nullptr) {
+            C::NumAllocations.fetch_add(1);
+            C::AllocationSize.fetch_add(internal::GetAllocationSize(ptr));
+        }
+        return ptr;
+    }
+
     template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified), typename... Args>
     T* Create(Args&&... args) {
         T* ptr = static_cast<T*>(internal::Allocate(sizeof(T), alignof(T), C::Name));
@@ -70,6 +82,19 @@ namespace mon3tr {
             C::AllocationSize.fetch_add(internal::GetAllocationSize(ptr));
         }
         return ptr;
+    }
+
+    template<MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
+    void Deallocate(void* ptr) {
+        M3_ASSERT(ptr != nullptr);
+        M3_ASSERT(C::NumAllocations > 0 && C::AllocationSize > 0);
+
+        if (ptr != nullptr) {
+            const uint64 allocSize = internal::GetAllocationSize(ptr);
+            internal::Deallocate(ptr);
+            C::NumAllocations.fetch_sub(1);
+            C::AllocationSize.fetch_sub(allocSize);
+        }
     }
 
     template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
