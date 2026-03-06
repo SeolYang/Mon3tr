@@ -31,7 +31,8 @@ set(Mon3trCorePublic
         Public/Mon3tr/Core/System.hpp
         Public/Mon3tr/Core/Window.hpp
         Public/Mon3tr/Core/Profiler.hpp
-        Public/Mon3tr/Core/GlobalTimer.hpp)
+        Public/Mon3tr/Core/GlobalTimer.hpp
+        Public/Mon3tr/Core/Allocator.hpp)
 
 target_sources(Mon3trCore PRIVATE
         ${Mon3trCorePrivate})
