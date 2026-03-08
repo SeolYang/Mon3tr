@@ -93,7 +93,7 @@ namespace mon3tr {
             const Header* const header = reinterpret_cast<const Header*>(static_cast<uint8*>(ptr) - kHeaderSize);
 
 #if defined(DEBUG) || defined(_DEBUG)
-            M3_ASSERT(header->MagicNumber == Header::kMagicNumber);
+            M3_ASSERT(header->MagicNumber == magicNumber_);
 #endif
             return Deallocate<C>(header->Base);
         }
