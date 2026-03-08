@@ -20,20 +20,26 @@
  */
 #pragma once
 #include <Mon3tr/Core/Memory.hpp>
+#include <random>
 
 namespace mon3tr {
     template<MemoryCategory C>
     class Allocator {
         struct Header {
-            static constexpr uint32 kMagicNumber = 0xA110C8D0;
             void*                   Base = nullptr;
 #if defined(DEBUG) || defined(_DEBUG)
-            uint32 MagicNumber = kMagicNumber; // Debug build에서 magic number 체크를 수행하지만,
+            uint32 MagicNumber = 0xFFFFFFFF;
 #endif
         };
 
     public:
         explicit Allocator([[maybe_unused]] const char* name) {
+#if defined(DEBUG) || defined(_DEBUG)
+            std::random_device randomDevice{};
+            std::mt19937 gen{randomDevice()};
+            std::uniform_int_distribution<decltype(Header::MagicNumber)> distribution{};
+            this->magicNumber_ = distribution(gen);
+#endif
         }
 
         Allocator([[maybe_unused]] const Allocator& other) {
@@ -52,8 +58,8 @@ namespace mon3tr {
         // 그러므로, offset을 사용하는 경우/그렇지 않은 경우 모두 반환하는 포인터 앞에 실제 주소를 포함하는 헤더를 추가하는 것이 바람직
         // 즉 [Padding][Header(8 bytes fixed)][Offset][Aligned Data]
         void* allocate(const size_t size, [[maybe_unused]] int flags = 0) {
-            return allocate(size, 1, 0, flags); // minimize padding space
-            //return allocate(size, 16, 0, flags); // balanced one
+            //return allocate(size, 1, 0, flags); // minimize empty space
+            return allocate(size, 16, 0, flags); // balanced one
             //return allocate(size, kCacheLineSize, 0, flags); // maximize cache efficiency of data structure
         }
 
@@ -71,6 +77,10 @@ namespace mon3tr {
             Header* const header = reinterpret_cast<Header*>(static_cast<uint8*>(base) + paddingSize);
             *header = Header{.Base = base};
 
+#if defined(DEBUG) || defined(_DEBUG)
+            header->MagicNumber = magicNumber_;
+#endif
+
             void* const p = static_cast<uint8*>(header->Base) + paddingSize + kHeaderSize;
             M3_ASSERT(reinterpret_cast<size_t>(static_cast<uint8*>(p) + offset) % alignment == 0);
             return p;
@@ -81,7 +91,10 @@ namespace mon3tr {
         void deallocate(void* const ptr, [[maybe_unused]] size_t n) {
             if (ptr == nullptr) { return; }
             const Header* const header = reinterpret_cast<const Header*>(static_cast<uint8*>(ptr) - kHeaderSize);
+
+#if defined(DEBUG) || defined(_DEBUG)
             M3_ASSERT(header->MagicNumber == Header::kMagicNumber);
+#endif
             return Deallocate<C>(header->Base);
         }
 
@@ -92,5 +105,8 @@ namespace mon3tr {
 
     private:
         static constexpr size_t kHeaderSize = sizeof(Header);
+#if defined(DEBUG) || defined(_DEBUG)
+        uint32_t magicNumber_ = 0;
+#endif
     };
 }
