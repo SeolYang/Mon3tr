@@ -69,6 +69,7 @@ namespace mon3tr {
             window_ = nullptr;
         }
 
+        SDL_Quit();
         System::Shutdown();
     }
 
