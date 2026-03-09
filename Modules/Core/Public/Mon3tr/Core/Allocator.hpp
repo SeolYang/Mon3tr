@@ -26,7 +26,7 @@ namespace mon3tr {
     template<MemoryCategory C>
     class Allocator {
         struct Header {
-            void*                   Base = nullptr;
+            void* Base = nullptr;
 #if defined(DEBUG) || defined(_DEBUG)
             uint32 MagicNumber = 0xFFFFFFFF;
 #endif
@@ -35,17 +35,17 @@ namespace mon3tr {
     public:
         explicit Allocator([[maybe_unused]] const char* name) {
 #if defined(DEBUG) || defined(_DEBUG)
-            std::random_device randomDevice{};
-            std::mt19937 gen{randomDevice()};
+            std::random_device                                           randomDevice{};
+            std::mt19937                                                 gen{randomDevice()};
             std::uniform_int_distribution<decltype(Header::MagicNumber)> distribution{};
             this->magicNumber_ = distribution(gen);
 #endif
         }
 
-        Allocator([[maybe_unused]] const Allocator& other) {
+        Allocator([[maybe_unused]] const Allocator& other) : magicNumber_(other.magicNumber_) {
         }
 
-        Allocator([[maybe_unused]] const Allocator& other, [[maybe_unused]] const char* name) {
+        Allocator([[maybe_unused]] const Allocator& other, [[maybe_unused]] const char* name) : Allocator(other) {
         }
 
         Allocator& operator=([[maybe_unused]] const Allocator& other) {
