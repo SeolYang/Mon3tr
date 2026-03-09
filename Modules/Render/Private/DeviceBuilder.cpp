@@ -19,35 +19,28 @@
  * SOFTWARE.
  */
 #include <Mon3tr/Render/DeviceBuilder.hpp>
-#if defined(M3_PLATFORM_WINDOWS)
-#include <nvrhi/d3d12.h>
-#include <dxgi1_6.h>
-#include <dxgidebug.h>
-#include <d3d12sdklayers.h>
-#endif
 
 M3_DEFINE_LOG_CATEGORY(RenderDeviceBuilder)
 
 namespace mon3tr::render {
-    std::expected<nvrhi::DeviceHandle, EDeviceCreationResult> DeviceBuilder::CreateDevice(const DeviceDesc& desc) {
+    std::expected<nvrhi::DeviceHandle, EDeviceCreateResult> DeviceBuilder::CreateDevice(const DeviceDesc& desc) {
         switch (desc.TargetAPI) {
             case EGraphicsAPI::D3D12:
 #if defined(M3_PLATFORM_WINDOWS)
                 return CreateDeviceD3D12(desc);
 #else
-                return std::unexpected(EDeviceCreationResult::GraphicsAPINotSupportedFromPlatform);
+                return std::unexpected(EDeviceCreateResult::GraphicsAPINotSupportedFromPlatform);
 #endif
             default:
-                return std::unexpected(EDeviceCreationResult::UnimplementedGraphicsAPI);
+                return std::unexpected(EDeviceCreateResult::UnimplementedGraphicsAPI);
         }
     }
 
 #if defined(M3_PLATFORM_WINDOWS)
-    std::expected<nvrhi::DeviceHandle, EDeviceCreationResult> DeviceBuilder::CreateDeviceD3D12([[maybe_unused]] const DeviceDesc& desc) {
+    std::expected<nvrhi::DeviceHandle, EDeviceCreateResult> DeviceBuilder::CreateDeviceD3D12([[maybe_unused]] const DeviceDesc& desc) {
         uint32 factoryCreationFlags = 0;
         {
 #if defined(DEBUG) || defined(_DEBUG)
-            factoryCreationFlags |= DXGI_CREATE_FACTORY_DEBUG;
             nvrhi::RefCountPtr<ID3D12Debug6> debugController;
             const bool bDebugControllerAcquired = SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
             if (!bDebugControllerAcquired)
@@ -62,6 +55,8 @@ namespace mon3tr::render {
                 debugController->SetEnableGPUBasedValidation(true);
                 M3_LOG(RenderDeviceBuilder, Info, "D3D12 gpu based validation enabled.");
             }
+
+            factoryCreationFlags |= DXGI_CREATE_FACTORY_DEBUG;
 #endif
         }
 
@@ -69,7 +64,7 @@ namespace mon3tr::render {
         const bool bFactoryCreated = SUCCEEDED(CreateDXGIFactory2(factoryCreationFlags, IID_PPV_ARGS(&factory)));
         if (!bFactoryCreated)
         {
-            return std::unexpected(EDeviceCreationResult::FailedToCreateDXGIFactory);
+            return std::unexpected(EDeviceCreateResult::FailedToCreateDXGIFactory);
         }
 
         nvrhi::RefCountPtr<IDXGIAdapter> adapter;
@@ -77,7 +72,7 @@ namespace mon3tr::render {
             SUCCEEDED(factory->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)));
         if (!bIsAdapterAcquired)
         {
-            return std::unexpected(EDeviceCreationResult::FailedToGetDXGIAdapter);
+            return std::unexpected(EDeviceCreateResult::FailedToGetDXGIAdapter);
         }
 
         // 최소 NVIDIA Turing 아키텍처 이후 GPU를 타겟하므로, 가능하다고 가정.
@@ -85,7 +80,7 @@ namespace mon3tr::render {
         nvrhi::RefCountPtr<ID3D12Device14> nativeDevice;
         if (!SUCCEEDED(D3D12CreateDevice(adapter.Get(), kMinimumFeatureLevel, IID_PPV_ARGS(&nativeDevice))))
         {
-            return std::unexpected(EDeviceCreationResult::FailedToCreateD3D12Device);
+            return std::unexpected(EDeviceCreateResult::FailedToCreateD3D12Device);
         }
 
 #if defined(_DEBUG) || defined(ENABLE_GPU_VALIDATION)
@@ -110,20 +105,23 @@ namespace mon3tr::render {
 
         nvrhi::RefCountPtr<ID3D12CommandQueue> graphicsCommandQueue;
         if (!SUCCEEDED(nativeDevice->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&graphicsCommandQueue)))) {
-            return std::unexpected(EDeviceCreationResult::FailedToCreateGraphicsCommandQueue);
+            return std::unexpected(EDeviceCreateResult::FailedToCreateGraphicsCommandQueue);
         }
+        graphicsCommandQueue->SetName(L"Graphics Queue");
 
         nvrhi::RefCountPtr<ID3D12CommandQueue> computeCommandQueue;
         commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
         if (!SUCCEEDED(nativeDevice->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&computeCommandQueue)))) {
-            return std::unexpected(EDeviceCreationResult::FailedToCreateComputeCommandQueue);
+            return std::unexpected(EDeviceCreateResult::FailedToCreateComputeCommandQueue);
         }
+        computeCommandQueue->SetName(L"Compute Queue");
 
         nvrhi::RefCountPtr<ID3D12CommandQueue> copyCommandQueue;
         commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
         if (!SUCCEEDED(nativeDevice->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&copyCommandQueue)))) {
-            return std::unexpected(EDeviceCreationResult::FailedToCreateCopyCommandQueue);
+            return std::unexpected(EDeviceCreateResult::FailedToCreateCopyCommandQueue);
         }
+        copyCommandQueue->SetName(L"Copy Queue");
 
         const nvrhi::d3d12::DeviceDesc deviceDescD3D12 {
         .errorCB = nullptr,
@@ -136,8 +134,13 @@ namespace mon3tr::render {
 
         nvrhi::DeviceHandle device = nvrhi::d3d12::createDevice(deviceDescD3D12);
         if (device == nullptr) {
-            return std::unexpected(EDeviceCreationResult::FailedToCreateRHIDevice);
+            return std::unexpected(EDeviceCreateResult::FailedToCreateRHIDevice);
         }
+
+        if (desc.bEnableValidationLayer) {
+            device = nvrhi::validation::createValidationLayer(device);
+        }
+
         return device;
     }
 #endif

@@ -29,7 +29,7 @@ namespace mon3tr {
 }
 
 namespace mon3tr::render {
-    enum class EDeviceCreationResult : uint8 {
+    enum class EDeviceCreateResult : uint8 {
         Success,
         GraphicsAPINotSupportedFromPlatform,
         UnimplementedGraphicsAPI,
@@ -42,19 +42,19 @@ namespace mon3tr::render {
         FailedToCreateGraphicsCommandQueue,
         FailedToCreateComputeCommandQueue,
         FailedToCreateCopyCommandQueue,
-
         /* end D3D12 */
     };
 
     struct DeviceDesc {
         EGraphicsAPI TargetAPI = EGraphicsAPI::D3D12;
+        bool bEnableValidationLayer = false;
     };
 
     class DeviceBuilder {
     public:
-        static std::expected<nvrhi::DeviceHandle, EDeviceCreationResult> CreateDevice(const DeviceDesc& desc);
+        static std::expected<nvrhi::DeviceHandle, EDeviceCreateResult> CreateDevice(const DeviceDesc& desc);
 
     private:
-        static std::expected<nvrhi::DeviceHandle, EDeviceCreationResult> CreateDeviceD3D12(const DeviceDesc& desc);
+        static std::expected<nvrhi::DeviceHandle, EDeviceCreateResult> CreateDeviceD3D12(const DeviceDesc& desc);
     };
 }
