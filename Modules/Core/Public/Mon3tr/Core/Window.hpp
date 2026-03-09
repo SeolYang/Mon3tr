@@ -54,7 +54,7 @@ namespace mon3tr {
         [[nodiscard]] bool  IsBorderless() const noexcept { return bIsBorderless_; }
         [[nodiscard]] bool  IsResized() const noexcept { return bIsResized_; }
 
-        EWindowInitializeResult Initialize(const WindowDesc& desc);
+        [[nodiscard]] EWindowInitializeResult Initialize(const WindowDesc& desc);
 
         void Shutdown() override;
 

@@ -61,6 +61,24 @@ namespace mon3tr {
         void DumpMemoryLeaks();
 
         uint64 GetAllocationSize(const void* ptr);
+
+        /**
+         * @warning 해당 함수는 호출 시, 타입에 대한 메모리 공간을 확보하고 그 공간에 대한 메모리 주소를 반환하지만,
+         * 생성자를 호출하지 않아 초기화 되지 않은 메모리 공간을 반환 합니다. 만약 별도로 생성자를 호출하지 않고
+         * 접근하는 경우 UB가 발생 할 수 있습니다.
+         * @tparam T 타입
+         * @tparam C 메모리 카테고리
+         * @return 생성자가 호출되지 않은 인스턴스에 대한 메모리 주소
+         */
+        template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
+        T* CreateWithoutConstruct() {
+            T* ptr = static_cast<T*>(internal::Allocate(sizeof(T), alignof(T), C::Name));
+            if (ptr != nullptr) {
+                C::NumAllocations.fetch_add(1);
+                C::AllocationSize.fetch_add(internal::GetAllocationSize(ptr));
+            }
+            return ptr;
+        }
     }
 
     template<MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
@@ -75,11 +93,9 @@ namespace mon3tr {
 
     template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified), typename... Args>
     T* Create(Args&&... args) {
-        T* ptr = static_cast<T*>(internal::Allocate(sizeof(T), alignof(T), C::Name));
+        T* ptr = internal::CreateWithoutConstruct<T, C>();
         if (ptr != nullptr) {
             std::construct_at(ptr, std::forward<Args>(args)...);
-            C::NumAllocations.fetch_add(1);
-            C::AllocationSize.fetch_add(internal::GetAllocationSize(ptr));
         }
         return ptr;
     }
@@ -119,6 +135,11 @@ namespace mon3tr {
         }
     };
 
+    /**
+     * @warning Create/CreateWithoutConstruct/Allocate 등, 엔진 하부에서 지원하는 메모리 관리 체계 외
+     * 메모리 할당(ex. new, malloc 등) 방식을 사용한 포인터를 전달하는 경우, 해제 단계에서 정의되지않은 행동을 할 수 있음.
+     * @todo 추후 아예 별도의 스마트 포인터 클래스로의 전환을 고려 할 것. (ex. Raw Pointer 전달 방식을 완전히 차단)
+     */
     template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
     using Ptr = std::unique_ptr<T, PtrDeleter<T, C> >;
 
