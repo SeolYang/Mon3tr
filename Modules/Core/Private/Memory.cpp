@@ -76,6 +76,7 @@ namespace mon3tr::internal {
 #ifdef M3_TRACK_MEM_ALLOCATIONS
         {
             std::unique_lock lock(gAllocationMutex);
+            M3_ASSERT(gAllocationMap.find(ptr) != gAllocationMap.end());
             gAllocationMap.erase(ptr);
         }
 #endif
@@ -86,7 +87,7 @@ namespace mon3tr::internal {
         std::shared_lock lock(gAllocationMutex);
         if (!gAllocationMap.empty()) {
             M3_LOG(Memory, Fatal, "Memory leaks found: {}", gAllocationMap.size());
-            for (const auto& [ptr, info]: gAllocationMap.values()) {
+            for (const auto& [ptr, info]: gAllocationMap) {
                 M3_LOG(Memory, Fatal, "[{}] At {}, Size: {}\n{}", info.DebugStr, ptr, info.Size, info.CallStack);
             }
         }
