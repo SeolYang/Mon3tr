@@ -52,6 +52,10 @@ namespace mon3tr {
         [[nodiscard]] int32 GetHeight() const noexcept { return height_; }
         [[nodiscard]] bool  IsFullscreen() const noexcept { return bIsFullscreen_; }
         [[nodiscard]] bool  IsBorderless() const noexcept { return bIsBorderless_; }
+        /**
+         * @return 해당 프레임에서 윈도우의 해상도가 변화 하였는지를 반환합니다.
+         * Fullscreen Mode의 토글시에도 resized 되었다고 취급합니다.
+         */
         [[nodiscard]] bool  IsResized() const noexcept { return bIsResized_; }
 
         [[nodiscard]] EWindowInitializeResult Initialize(const WindowDesc& desc);
@@ -59,6 +63,15 @@ namespace mon3tr {
         void Shutdown() override;
 
         void* GetNative();
+
+        void HandleEvent(const SDL_Event& event);
+
+        void EndFrame();
+
+    private:
+        void HandleResize(const SDL_Event& event);
+        void HandleFullscreenToggleKeyEvent(const SDL_Event& event);
+        void HandleFullscreenEvent(uint64 flags);
 
     private:
         constexpr static int32 kWindowWidthFallback = 1280;
