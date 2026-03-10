@@ -106,6 +106,9 @@ namespace mon3tr::internal {
                 M3_LOG(Memory, Fatal, "[{}] At {}, Size: {}\n{}", info.CategoryName, ptr, info.Size, info.CallStack);
             }
         }
+        else {
+            M3_LOG(Memory, Info, "No memory leaks found.");
+        }
 #endif
     }
 
