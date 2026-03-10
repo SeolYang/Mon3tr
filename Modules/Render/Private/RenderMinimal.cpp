@@ -18,22 +18,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
-#include <nvrhi/nvrhi.h>
-#include <nvrhi/validation.h>
+#include <Mon3tr/Render/RenderMinimal.hpp>
 
-#if defined(M3_PLATFORM_WINDOWS)
-#include <nvrhi/d3d12.h>
-#include <dxgi1_6.h>
-#include <dxgidebug.h>
-#include <d3d12sdklayers.h>
-#endif
-
-#include <Mon3tr/Core/CoreMinimal.hpp>
-
-M3_DECLARE_MEM_CATEGORY(Render)
-
-namespace mon3tr::render {
-    using EFormat = nvrhi::Format;
-    using EGraphicsAPI = nvrhi::GraphicsAPI;
-}
+M3_DEFINE_MEM_CATEGORY(Render)

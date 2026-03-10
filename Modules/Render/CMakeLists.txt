@@ -9,9 +9,20 @@ target_include_directories(
 )
 
 set(Mon3trRenderPrivate
-        Private/DeviceBuilder.cpp)
+        Private/RenderMinimal.cpp
+        Private/DeviceBuilder.cpp
+        Private/SwapChain.cpp
+        Private/SwapChain_DX12.hpp
+        Private/SwapChain_DX12.cpp
+        Private/FrameManager.cpp
+        Private/FrameManager_DX12.hpp
+        Private/FrameManager_DX12.cpp)
 set(Mon3trRenderPublic
-        Public/Mon3tr/Render/DeviceBuilder.hpp)
+        Public/Mon3tr/Render/RenderMinimal.hpp
+        Public/Mon3tr/Render/DeviceBuilder.hpp
+        Public/Mon3tr/Render/SwapChain.hpp
+        Public/Mon3tr/Render/FrameManager.hpp
+        Public/Mon3tr/Render/Renderer.hpp)
 
 target_sources(Mon3trRender PRIVATE
         ${Mon3trRenderPrivate})
