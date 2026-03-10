@@ -20,3 +20,5 @@
  */
 
 #include <Mon3tr/Core/CoreMinimal.hpp>
+
+M3_DEFINE_MEM_CATEGORY(Core)

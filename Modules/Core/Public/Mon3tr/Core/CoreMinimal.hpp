@@ -52,7 +52,10 @@
 #include <Mon3tr/Core/System.hpp>
 #include <Mon3tr/Core/Log.hpp>
 #include <Mon3tr/Core/Profiler.hpp>
+#include <Mon3tr/Core/Container.hpp>
 namespace m3 = mon3tr;
+
+M3_DECLARE_MEM_CATEGORY(Core)
 
 /* External Libs */
 #pragma warning(push, 0)
