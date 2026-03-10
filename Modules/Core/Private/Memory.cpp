@@ -41,7 +41,7 @@ namespace mon3tr::internal {
 #ifdef M3_TRACK_MEM_ALLOCATIONS
     struct AllocationInfo {
         uint64           Size = 0;
-        std::string_view DebugStr = M3_MEM_CATEGORY(Unspecified)::Name;
+        std::string_view CategoryName = M3_MEM_CATEGORY(Unspecified)::Name;
         std::stacktrace  CallStack{};
     };
 
@@ -49,7 +49,7 @@ namespace mon3tr::internal {
     static ankerl::unordered_dense::map<void*, AllocationInfo> gAllocationMap;
 #endif
 
-    void* Allocate(const uint64 size, const uint64 alignment, const std::string_view debugStr) {
+    void* Allocate(const uint64 size, const uint64 alignment, const std::string_view categoryName) {
         M3_ASSERT(size > 0);
         M3_ASSERT(alignment > 0 && IsPowerOf2(alignment));
         void* const ptr = snmalloc::alloc_aligned(alignment, size);
@@ -60,7 +60,7 @@ namespace mon3tr::internal {
             std::unique_lock      lock(gAllocationMutex);
             gAllocationMap[ptr] = AllocationInfo{
                 .Size = size,
-                .DebugStr = debugStr,
+                .CategoryName = categoryName,
                 .CallStack = callStack
             };
         }
@@ -69,17 +69,30 @@ namespace mon3tr::internal {
         return ptr;
     }
 
-    void Deallocate(void* const ptr) {
+    void Deallocate(void* const ptr, const std::string_view categoryName) {
         M3_ASSERT(ptr != nullptr);
-        snmalloc::dealloc(ptr);
-
 #ifdef M3_TRACK_MEM_ALLOCATIONS
         {
             std::unique_lock lock(gAllocationMutex);
-            M3_ASSERT(gAllocationMap.find(ptr) != gAllocationMap.end());
-            gAllocationMap.erase(ptr);
+            const auto       itr = gAllocationMap.find(ptr);
+            M3_ASSERT(itr != gAllocationMap.end());
+            if (itr == gAllocationMap.end()) {
+                M3_LOG(Memory, Fatal, "Invalid memory deallocation : {}", ptr);
+                M3_ASSERT(false);
+            }
+
+            if (itr->second.CategoryName != categoryName) {
+                M3_LOG(Memory, Fatal, "Memory category unmatched (expected: {}, requested: {}): {}\n CallStack:\n{}",
+                       itr->second.CategoryName, categoryName,
+                       ptr,
+                       itr->second.CallStack);
+                M3_ASSERT(false);
+            }
+            gAllocationMap.erase(itr);
         }
 #endif
+
+        snmalloc::dealloc(ptr);
     }
 
     void DumpMemoryLeaks() {
@@ -88,7 +101,7 @@ namespace mon3tr::internal {
         if (!gAllocationMap.empty()) {
             M3_LOG(Memory, Fatal, "Memory leaks found: {}", gAllocationMap.size());
             for (const auto& [ptr, info]: gAllocationMap) {
-                M3_LOG(Memory, Fatal, "[{}] At {}, Size: {}\n{}", info.DebugStr, ptr, info.Size, info.CallStack);
+                M3_LOG(Memory, Fatal, "[{}] At {}, Size: {}\n{}", info.CategoryName, ptr, info.Size, info.CallStack);
             }
         }
 #endif

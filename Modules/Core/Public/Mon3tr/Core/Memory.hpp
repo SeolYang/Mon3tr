@@ -54,9 +54,9 @@ namespace mon3tr {
     };
 
     namespace internal {
-        void* Allocate(uint64 size, uint64 alignment, std::string_view debugStr = M3_MEM_CATEGORY(Unspecified)::Name);
+        void* Allocate(uint64 size, uint64 alignment, std::string_view categoryName);
 
-        void Deallocate(void* ptr);
+        void Deallocate(void* ptr, std::string_view categoryName);
 
         void DumpMemoryLeaks();
 
@@ -70,7 +70,7 @@ namespace mon3tr {
          * @tparam C 메모리 카테고리
          * @return 생성자가 호출되지 않은 인스턴스에 대한 메모리 주소
          */
-        template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
+        template<typename T, MemoryCategory C>
         T* CreateWithoutConstruct() {
             T* ptr = static_cast<T*>(internal::Allocate(sizeof(T), alignof(T), C::Name));
             if (ptr != nullptr) {
@@ -102,30 +102,30 @@ namespace mon3tr {
 
     template<MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
     void Deallocate(void* ptr) {
-        M3_ASSERT(ptr != nullptr);
         M3_ASSERT(C::NumAllocations > 0 && C::AllocationSize > 0);
-
-        if (ptr != nullptr) {
-            const uint64 allocSize = internal::GetAllocationSize(ptr);
-            internal::Deallocate(ptr);
-            C::NumAllocations.fetch_sub(1);
-            C::AllocationSize.fetch_sub(allocSize);
+        if (ptr == nullptr) {
+            M3_ASSERT(false);
+            return;
         }
+
+        const uint64 allocSize = internal::GetAllocationSize(ptr);
+        internal::Deallocate(ptr, C::Name);
+
+        C::NumAllocations.fetch_sub(1);
+        C::AllocationSize.fetch_sub(allocSize);
     }
 
     template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
     void Destroy(T* const ptr) {
         M3_ASSERT(ptr != nullptr);
         M3_ASSERT(C::NumAllocations > 0 && C::AllocationSize > 0);
-
-        if (ptr != nullptr) {
-            const uint64 allocSize = internal::GetAllocationSize(reinterpret_cast<void*>(ptr));
-            ptr->~T();
-            internal::Deallocate(ptr);
-            // @todo 헤더를 추가해서 해당 카테고리에 대해 할당된 메모리 공간이 맞는지 확인?
-            C::NumAllocations.fetch_sub(1);
-            C::AllocationSize.fetch_sub(allocSize);
+        if (ptr == nullptr) {
+            M3_ASSERT(false);
+            return;
         }
+
+        ptr->~T();
+        Deallocate<C>(ptr);
     }
 
     template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
