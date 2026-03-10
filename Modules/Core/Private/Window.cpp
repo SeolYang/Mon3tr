@@ -120,10 +120,6 @@ namespace mon3tr {
         }
     }
 
-    void Window::EndFrame() {
-        bIsResized_ = false;
-    }
-
     void Window::HandleResize(const SDL_Event& event) {
         if ((event.window.data1 != width_ || event.window.data2 != height_) &&
             event.window.data1 > 0 && event.window.data2 > 0) {

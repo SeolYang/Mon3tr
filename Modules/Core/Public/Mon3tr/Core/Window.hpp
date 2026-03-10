@@ -66,7 +66,7 @@ namespace mon3tr {
 
         void HandleEvent(const SDL_Event& event);
 
-        void EndFrame();
+        void ResetResizedFlag() { bIsResized_ = false; }
 
     private:
         void HandleResize(const SDL_Event& event);
