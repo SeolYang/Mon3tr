@@ -102,11 +102,8 @@ namespace mon3tr {
 
     template<MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
     void Deallocate(void* ptr) {
-        M3_ASSERT(C::NumAllocations > 0 && C::AllocationSize > 0);
-        if (ptr == nullptr) {
-            M3_ASSERT(false);
-            return;
-        }
+        M3_PRE_COND(ptr != nullptr);
+        M3_PRE_COND(C::NumAllocations > 0 && C::AllocationSize > 0);
 
         const uint64 allocSize = internal::GetAllocationSize(ptr);
         internal::Deallocate(ptr, C::Name);
@@ -117,12 +114,8 @@ namespace mon3tr {
 
     template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
     void Destroy(T* const ptr) {
-        M3_ASSERT(ptr != nullptr);
-        M3_ASSERT(C::NumAllocations > 0 && C::AllocationSize > 0);
-        if (ptr == nullptr) {
-            M3_ASSERT(false);
-            return;
-        }
+        M3_PRE_COND(ptr != nullptr);
+        M3_PRE_COND(C::NumAllocations > 0 && C::AllocationSize > 0);
 
         ptr->~T();
         Deallocate<C>(ptr);

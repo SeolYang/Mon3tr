@@ -25,7 +25,7 @@
 #pragma warning(pop)
 #include <Mon3tr/Core/CoreMinimal.hpp>
 
-#if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG) || defined(M3_FORCE_ENABLE_TRACK_MEM_ALLOCATIONS)
 #ifndef M3_TRACK_MEM_ALLOCATIONS
 #define M3_TRACK_MEM_ALLOCATIONS
 #endif
@@ -50,8 +50,9 @@ namespace mon3tr::internal {
 #endif
 
     void* Allocate(const uint64 size, const uint64 alignment, const std::string_view categoryName) {
-        M3_ASSERT(size > 0);
-        M3_ASSERT(alignment > 0 && IsPowerOf2(alignment));
+        M3_PRE_COND(size > 0);
+        M3_PRE_COND(alignment > 0 && IsPowerOf2(alignment));
+
         void* const ptr = snmalloc::alloc_aligned(alignment, size);
 
 #ifdef M3_TRACK_MEM_ALLOCATIONS
@@ -70,7 +71,8 @@ namespace mon3tr::internal {
     }
 
     void Deallocate(void* const ptr, const std::string_view categoryName) {
-        M3_ASSERT(ptr != nullptr);
+        M3_PRE_COND(ptr != nullptr);
+
 #ifdef M3_TRACK_MEM_ALLOCATIONS
         {
             std::unique_lock lock(gAllocationMutex);
