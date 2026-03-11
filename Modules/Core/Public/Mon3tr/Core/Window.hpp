@@ -32,7 +32,7 @@ namespace mon3tr {
         std::string_view Title = "Mon3tr";    ///< 생성될 윈도우 창의 타이틀(제목)
         int32            Width = 0;           ///< 생성될 윈도우 창의 가로 해상도(Pixel). 만약 너비/높이 두 값중 하나라도 val <= 0이라면 선택 가능한 현재 모니터의 해상도를 사용.
         int32            Height = 0;          ///< 생성될 윈도우 창의 세로 해상도(Pixel). 만약 너비/높이 두 값중 하나라도 val <= 0이라면 선택 가능한 현재 모니터의 해상도를 사용.
-        bool             bFullscreen = false; ///< 생성될 윈도우 창이 전체화면으로 생성 될지 설정.
+        bool             bFullscreen = false; ///< 생성될 윈도우 창이 전체화면으로 생성 될지 설정. @deprecated
         bool             bBorderless = false; ///< 생성될 윈도우 창이 테두리없는 창일지 결정.
     };
 
@@ -50,13 +50,7 @@ namespace mon3tr {
 
         [[nodiscard]] int32 GetWidth() const noexcept { return width_; }
         [[nodiscard]] int32 GetHeight() const noexcept { return height_; }
-        [[nodiscard]] bool  IsFullscreen() const noexcept { return bIsFullscreen_; }
         [[nodiscard]] bool  IsBorderless() const noexcept { return bIsBorderless_; }
-        /**
-         * @return 해당 프레임에서 윈도우의 해상도가 변화 하였는지를 반환합니다.
-         * Fullscreen Mode의 토글시에도 resized 되었다고 취급합니다.
-         */
-        [[nodiscard]] bool  IsResized() const noexcept { return bIsResized_; }
 
         [[nodiscard]] EWindowInitializeResult Initialize(const WindowDesc& desc);
 
@@ -64,14 +58,11 @@ namespace mon3tr {
 
         void* GetNative();
 
-        void HandleEvent(const SDL_Event& event);
+        void Resize(int32 newWidth, int32 newHeight);
+        void SetBorderless(bool bIsBorderless);
+        void SetTitle(std::string_view title);
 
-        void ResetResizedFlag() { bIsResized_ = false; }
-
-    private:
-        void HandleResize(const SDL_Event& event);
-        void HandleFullscreenToggleKeyEvent(const SDL_Event& event);
-        void HandleFullscreenEvent(uint64 flags);
+        [[nodiscard]] bool HandleResize();
 
     private:
         constexpr static int32 kWindowWidthFallback = 1280;
@@ -79,7 +70,6 @@ namespace mon3tr {
 
         int32 width_ = 0;
         int32 height_ = 0;
-        bool  bIsFullscreen_ = false;
         bool  bIsBorderless_ = false;
 
         bool bIsResized_ = false;

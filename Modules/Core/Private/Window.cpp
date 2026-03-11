@@ -49,14 +49,15 @@ namespace mon3tr {
         SDL_WindowFlags windowFlags = 0;
         windowFlags |= desc.bBorderless ? SDL_WINDOW_BORDERLESS : 0;
         bIsBorderless_ = desc.bBorderless;
-        windowFlags |= desc.bFullscreen ? SDL_WINDOW_FULLSCREEN : 0;
-        bIsFullscreen_ = desc.bFullscreen;
+        //windowFlags |= desc.bFullscreen ? SDL_WINDOW_FULLSCREEN : 0;
 
         SDL_Window* window = SDL_CreateWindow(desc.Title.data(), targetWidth, targetHeight, windowFlags);
         if (window == nullptr) {
             M3_LOG(Window, Fatal, "Failed to create window: {}", SDL_GetError());
             return EWindowInitializeResult::SDLWindowCreationFailed;
         }
+        width_ = targetWidth;
+        height_ = targetHeight;
         window_ = window;
 
         MarkAsInitialized();
@@ -93,70 +94,51 @@ namespace mon3tr {
         return nativeHandle;
     }
 
-    void Window::HandleEvent(const SDL_Event& event) {
-        M3_PRE_COND(window_ != nullptr);
-
-        if (event.window.windowID != SDL_GetWindowID(window_)) {
+    void Window::Resize(const int32 newWidth, const int32 newHeight) {
+        if (newWidth == width_ && newHeight == height_) {
             return;
         }
 
-        const uint64 flags = SDL_GetWindowFlags(window_);
-        switch (event.type) {
-            case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-            case SDL_EVENT_WINDOW_RESIZED:
-                HandleResize(event);
-                break;
+        const int32 oldWidth = width_;
+        const int32 oldHeight = height_;
+        width_ = newWidth;
+        height_ = newHeight;
+        bIsResized_ = SDL_SetWindowSize(window_, width_, height_);
 
-            case SDL_EVENT_KEY_DOWN:
-                HandleFullscreenToggleKeyEvent(event);
-                break;
-
-            case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
-            case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
-                HandleFullscreenEvent(flags);
-                break;
-            default:
-                return;
+        if (bIsResized_) {
+            M3_LOG(Window, Info, "The window resized from {}x{} to {}x{}.", oldWidth, oldHeight, newWidth, newHeight);
+        } else {
+            M3_LOG(Window, Warning, "Failed to resize window: {}", SDL_GetError());
         }
     }
 
-    void Window::HandleResize(const SDL_Event& event) {
-        if ((event.window.data1 != width_ || event.window.data2 != height_) &&
-            event.window.data1 > 0 && event.window.data2 > 0) {
-            M3_LOG(Window, Info, "The window resized from {}x{} to {}x{}.", width_, height_, event.window.data1, event.window.data2);
-            width_ = event.window.data1;
-            height_ = event.window.data2;
-            bIsResized_ = true;
+    void Window::SetBorderless(const bool bIsBorderless) {
+        if (bIsBorderless == bIsBorderless_) {
+            return;
+        }
+
+        if (!SDL_SetWindowBordered(window_, !bIsBorderless)) {
+            M3_LOG(Window, Warning, "Failed to switch window borderless: {}", SDL_GetError());
+            return;
+        }
+
+        bIsBorderless_ = bIsBorderless;
+        if (bIsBorderless_) {
+            M3_LOG(Window, Info, "The Window switched to borderless.");
+        } else {
+            M3_LOG(Window, Info, "The Window switched to bordered.");
         }
     }
 
-    void Window::HandleFullscreenToggleKeyEvent(const SDL_Event& event) {
-        if (event.key.key == SDLK_RETURN && (event.key.mod & SDL_KMOD_ALT)) {
-            SDL_SetWindowFullscreen(window_, !bIsFullscreen_);
+    void Window::SetTitle(const std::string_view title) {
+        if (!SDL_SetWindowTitle(window_, title.data())) {
+            M3_LOG(Window, Warning, "Failed to set title: {}", SDL_GetError());
         }
     }
 
-    void Window::HandleFullscreenEvent(const uint64 flags) {
-        const bool bOldFullscreenState = bIsFullscreen_;
-        bIsFullscreen_ = (flags & SDL_WINDOW_FULLSCREEN) != 0;
-        if (bOldFullscreenState != bIsFullscreen_) {
-            if (bIsFullscreen_) {
-                M3_LOG(Window, Info, "The window entered to full-screen mode.");
-            } else {
-                M3_LOG(Window, Info, "The window leave full-screen mode.");
-            }
-
-            bIsResized_ = true;
-        }
-
-        const bool bOldBorderlessState = bIsBorderless_;
-        bIsBorderless_ = (flags & SDL_WINDOW_BORDERLESS) != 0;
-        if (bOldBorderlessState != bIsBorderless_) {
-            if (bIsBorderless_) {
-                M3_LOG(Window, Info, "The window entered to borderless mode.");
-            } else {
-                M3_LOG(Window, Info, "The window leave borderless mode.");
-            }
-        }
+    bool Window::HandleResize() {
+        const bool bShouldHandleResize = bIsResized_;
+        bIsResized_ = false;
+        return bShouldHandleResize;
     }
 }
