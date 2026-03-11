@@ -18,30 +18,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include <Mon3tr/Render/RenderMinimal.hpp>
-#include <dxgidebug.h>
+#pragma once
+#include <Mon3tr/Render/FrameManager.hpp>
 
-M3_DEFINE_MEM_CATEGORY(Render)
+namespace mon3tr::render {
+    class FrameManager_DX12 : public FrameManager {
+        friend class FrameManager;
 
-namespace mon3tr::internal {
-    // dxguid.lib required
-    void ReportLiveObjects_D3D12() {
-#ifdef _DEBUG
-        nvrhi::RefCountPtr<IDXGIDebug1> dxgiDebug;
-        if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug)))) {
-            [[maybe_unused]] const HRESULT result =
-                    dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, (DXGI_DEBUG_RLO_FLAGS) (DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
-        }
-#endif
-    }
+    public:
+        ~FrameManager_DX12() override = default;
 
-    void ReportLiveRenderObjects(const render::EGraphicsAPI api) {
-        switch (api) {
-            case render::EGraphicsAPI::D3D12:
-                internal::ReportLiveObjects_D3D12();
-                break;
-            default:
-                M3_UNIMPLEMENTED();
-        }
-    }
+        void Shutdown() override;
+
+        void SignalAllWaitEvents() override;
+
+    private:
+        FrameManager_DX12() = default;
+
+        void BeginFrame() override;
+        // After SwapChain->Present
+        void EndFrame() override;
+
+        EFrameManagerInitializeResult Initialize_Impl() override;
+
+    private:
+        nvrhi::RefCountPtr<ID3D12Fence1>        frameFence_;
+        Vector<HANDLE, M3_MEM_CATEGORY(Render)> frameEvents_; ///< Event per each back-buffer of SwapChain
+    };
 }

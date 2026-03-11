@@ -19,23 +19,48 @@
  * SOFTWARE.
  */
 #pragma once
-#include <nvrhi/nvrhi.h>
-#include <nvrhi/validation.h>
-#include <nvrhi/d3d12.h>
-#include <dxgi1_6.h>
-#include <dxgidebug.h>
-#include <d3d12sdklayers.h>
-
 #include <Mon3tr/Core/CoreMinimal.hpp>
-
-M3_DECLARE_MEM_CATEGORY(Render)
+#include <Mon3tr/Core/System.hpp>
+#include <Mon3tr/Render/RenderMinimal.hpp>
 
 namespace mon3tr::render {
-    using EFormat = nvrhi::Format;
-    using EGraphicsAPI = nvrhi::GraphicsAPI;
+    struct FrameManagerDependency {
+        nvrhi::DeviceHandle RenderDevice = nullptr;
+        class SwapChain*    SwapChainInstance = nullptr;
+    };
 
-}
+    struct FrameManagerDesc {
+    };
 
-namespace mon3tr::internal {
-        void ReportLiveRenderObjects(render::EGraphicsAPI api);
+    enum class EFrameManagerInitializeResult : uint8 {
+        Success,
+        FailedToCreateFrameFence
+    };
+
+    class FrameManager : public System {
+    public:
+        ~FrameManager() override = default;
+
+        virtual void BeginFrame() = 0;
+
+        virtual void EndFrame() { ++renderFrameIdx_; }
+
+        [[nodiscard]] static Ptr<FrameManager, M3_MEM_CATEGORY(Render)> Create(EGraphicsAPI graphicsAPI);
+
+        [[nodiscard]] EFrameManagerInitializeResult Initialize(const FrameManagerDependency& dependency, const FrameManagerDesc& desc);
+
+        virtual void Shutdown() override;
+
+        virtual void SignalAllWaitEvents() = 0;
+
+    protected:
+        FrameManager() = default;
+
+        virtual EFrameManagerInitializeResult Initialize_Impl() = 0;
+
+    protected:
+        nvrhi::DeviceHandle renderDevice_ = nullptr;
+        SwapChain* swapChain_ = nullptr;
+        uint64 renderFrameIdx_ = 1;
+    };
 }

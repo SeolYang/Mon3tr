@@ -38,6 +38,7 @@ target_link_libraries(Mon3trRender PUBLIC
         nvrhi_vk
 
         dxgi.lib
+        dxguid.lib
 )
 
 target_compile_options(Mon3trRender PRIVATE

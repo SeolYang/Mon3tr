@@ -18,30 +18,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include <Mon3tr/Render/RenderMinimal.hpp>
-#include <dxgidebug.h>
+#pragma once
+#include <Mon3tr/Render/SwapChain.hpp>
 
-M3_DEFINE_MEM_CATEGORY(Render)
+namespace mon3tr::render {
+    class SwapChain_DX12 : public SwapChain {
+        friend class SwapChain;
 
-namespace mon3tr::internal {
-    // dxguid.lib required
-    void ReportLiveObjects_D3D12() {
-#ifdef _DEBUG
-        nvrhi::RefCountPtr<IDXGIDebug1> dxgiDebug;
-        if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug)))) {
-            [[maybe_unused]] const HRESULT result =
-                    dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, (DXGI_DEBUG_RLO_FLAGS) (DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
-        }
-#endif
-    }
+    public:
+        bool Present() override;
 
-    void ReportLiveRenderObjects(const render::EGraphicsAPI api) {
-        switch (api) {
-            case render::EGraphicsAPI::D3D12:
-                internal::ReportLiveObjects_D3D12();
-                break;
-            default:
-                M3_UNIMPLEMENTED();
-        }
-    }
+        void Shutdown() override;
+
+    protected:
+        ESwapChainInitializeResult Initialize_Impl() override;
+        ESwapChainResizeResult Resize_Impl() override;
+
+    private:
+        SwapChain_DX12() = default;
+
+        bool CreateRenderTargets();
+
+    private:
+        nvrhi::RefCountPtr<IDXGIFactory6>   dxgiFactory_;
+        nvrhi::RefCountPtr<IDXGISwapChain3> dxgiSwapChain_;
+
+        Vector<nvrhi::RefCountPtr<ID3D12Resource>, M3_MEM_CATEGORY(Render)> nativeRenderTargets_;
+
+        bool bSupportedTearing_ = false;
+
+        DXGI_SWAP_CHAIN_DESC1           swapChainDesc_ = {};
+    };
 }

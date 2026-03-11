@@ -25,65 +25,122 @@
 #include <Mon3tr/Core/Log.hpp>
 #include <Mon3tr/Core/Window.hpp>
 #include <Mon3tr/Core/GlobalTimer.hpp>
+#include <Mon3tr/Render/DeviceBuilder.hpp>
+
+#include <EASTL/vector.h>
+#include <Mon3tr/Core/Allocator.hpp>
+#include <Mon3tr/Core/Container.hpp>
+#include <Mon3tr/Render/SwapChain.hpp>
+#include <Mon3tr/Render/FrameManager.hpp>
 
 M3_DECLARE_LOG_CATEGORY(TestLog);
+
 M3_DEFINE_LOG_CATEGORY(TestLog);
 
 int main() {
-    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto logger = std::make_shared<spdlog::logger>("console", console_sink);
-    spdlog::set_default_logger(logger);
-
     namespace m3 = mon3tr;
-    m3::HandleManager<int> test;
+    {
+        mon3tr::GlobalTimer::GetInstance().BeginNewFrame();
+        std::this_thread::sleep_for(std::chrono::milliseconds(550));
+        mon3tr::GlobalTimer::GetInstance().BeginNewFrame();
+        M3_LOG(TestLog, Trace, "DT: {}, {}", m3::GlobalTimer::GetInstance().GetDeltaTimeMilli(), m3::GlobalTimer::GetInstance().GetDeltaTime());
 
-    m3::Handle<int> handle = test.Create(35);
-    static_assert(sizeof(m3::Handle<int>) == sizeof(m3::uint64));
-    M3_ASSERT(!handle.IsNull());
+        m3::Ptr<m3::Window> window = m3::MakePtr<m3::Window>();
+        const auto          windowInitResult = window->Initialize(m3::WindowDesc{.Title = "test", .Width = 1920, .Height = 1080, .bBorderless = false});
+        if (windowInitResult != m3::EWindowInitializeResult::Success) {
+            M3_LOG(TestLog, Fatal, "Failed to init window : {}", magic_enum::enum_name(windowInitResult));
+        }
 
-    int* ptr = test.GetMutable(handle);
-    M3_ASSERT(ptr != nullptr);
-    M3_ASSERT(*ptr == 35);
-    M3_SAFE_HANDLE_DESTROY(test, handle);
+        auto deviceExpected = m3::render::DeviceBuilder::CreateDevice(m3::render::DeviceDesc{.TargetAPI = m3::render::EGraphicsAPI::D3D12});
+        M3_ASSERT(deviceExpected.has_value());
 
-    M3_ASSERT(mon3tr::AlignUp(3, 1024) == 1024);
+        m3::render::SwapChainDependency swapChainDependency{.WindowSystem = window.get(), .RenderDevice = deviceExpected.value()};
+        m3::render::SwapChainDesc       swapChainDesc{};
+        auto                            swapChain = m3::render::SwapChain::Create(m3::render::EGraphicsAPI::D3D12);
+        const auto                      swapChainInitResult = swapChain->Initialize(swapChainDependency, swapChainDesc);
+        if (swapChainInitResult != m3::render::ESwapChainInitializeResult::Success) {
+            M3_LOG(TestLog, Fatal, "Failed to init swap chain : {}", magic_enum::enum_name(swapChainInitResult));
+        }
 
-    constexpr std::string_view        kStrTable[8] = {"A", "AB", "ABC", "ABCD", "ABCDE", "ABCDEF", "ABCDEFG", "ABCDEFGH"};
-    mon3tr::VirtualArray<std::string> vArray{64};
-    std::vector<std::string>          vec;
-    vec.reserve(64);
+        m3::render::FrameManagerDependency frameManagerDependency{.RenderDevice = deviceExpected.value(), .SwapChainInstance = swapChain.get()};
+        m3::render::FrameManagerDesc       frameManagerDesc{};
+        auto                               frameManager = m3::render::FrameManager::Create(m3::render::EGraphicsAPI::D3D12);
+        const auto                         frameManagerInitResult = frameManager->Initialize(frameManagerDependency, frameManagerDesc);
+        if (frameManagerInitResult != m3::render::EFrameManagerInitializeResult::Success) {
+            M3_LOG(TestLog, Fatal, "Failed to init frame manager: {}", magic_enum::enum_name(frameManagerInitResult));
+        }
 
-    for (size_t idx = 0; idx < 64; ++idx) {
-        vArray.EmplaceBack(kStrTable[idx % 8]);
-        vec.emplace_back(kStrTable[idx % 8]);
+        M3_LOG(TestLog, Info, "Unspecified Category Memory Usage: {} bytes, Num Alloc: {}", M3_MEM_CATEGORY(Unspecified)::AllocationSize.load(),
+               M3_MEM_CATEGORY(Unspecified)::NumAllocations.load());
+        M3_LOG(TestLog, Info, "Core Category Memory Usage: {} bytes, Num Alloc: {}", M3_MEM_CATEGORY(Core)::AllocationSize.load(),
+               M3_MEM_CATEGORY(Core)::NumAllocations.load());
+        M3_LOG(TestLog, Info, "Render Category Memory Usage: {} bytes, Num Alloc: {}", M3_MEM_CATEGORY(Render)::AllocationSize.load(),
+               M3_MEM_CATEGORY(Render)::NumAllocations.load());
+
+        window->Resize(1280, 720);
+
+        while (true) {
+            m3::GlobalTimer::GetInstance().BeginNewFrame();
+            window->SetTitle(std::format("Mon3tr Sandbox FPS: {} ({} ms)",
+                                                        m3::GlobalTimer::GetInstance().GetFramesPerSecond(),
+                                                        m3::GlobalTimer::GetInstance().GetDeltaTimeMilli()));
+
+            bool bShouldExit = false;
+
+            SDL_Event event;
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_EVENT_QUIT) {
+                    bShouldExit = true;
+                    break;
+                }
+            }
+
+            if (bShouldExit) {
+                break;
+            }
+
+            if (window->HandleResize()) {
+                // GPU 상에서 실행 중인, 또는 실행 대기중인 모든 명령어의 실행이 완료되어 리소스의 재할당이 안전해질때 까지 대기
+                deviceExpected.value()->waitForIdle();
+                deviceExpected.value()->runGarbageCollection();
+
+                // 기존 백버퍼 렌더 타겟 해제->스왑체인 백버퍼 리사이즈->리사이즈된 백버퍼에 대한 신규 렌더 타겟 할당
+                m3::render::ESwapChainResizeResult resizeResult = swapChain->Resize();
+                M3_LOG(TestLog, Info, "Resize Result: {}", magic_enum::enum_name(resizeResult));
+                // 그 외, 렌더 파이프라인 내에 리사이즈가 필요한 리소스들에 대한 조정
+
+                // 앞서, 모든 명령어의 실행이 완료될때 까지 대기하였으므로, 혹여나 최종적으로 signal을 제때 받지 못한 이벤트에 대해
+                // 대기하지 않도록 모든 프레임 이벤트에 신호를 준다.
+                frameManager->SignalAllWaitEvents();
+            }
+
+            // game logic, etc..
+
+            frameManager->BeginFrame();
+            // render
+            swapChain->Present();
+            frameManager->EndFrame();
+        } // End Main Loop
+
+        // required for safe quit!!!!!
+        deviceExpected.value()->waitForIdle();
+        frameManager->SignalAllWaitEvents();
+
+        // 앞선 처리가 없는 경우, 내부에서 frame event를 기다리느라 무한 대기 가능성 있음.
+        frameManager->Shutdown();
+        swapChain->Shutdown();
+        window->Shutdown();
     }
 
-    M3_ASSERT(vArray.GetSize() == 64);
-    for (size_t idx = 0; idx < 64; ++idx) {
-        M3_ASSERT(vec[idx] == vArray[idx]);
-    }
+    M3_LOG(TestLog, Info, "(After Exit) Unspecified Category Memory Usage: {} bytes, Num Alloc: {}", M3_MEM_CATEGORY(Unspecified)::AllocationSize.load(),
+           M3_MEM_CATEGORY(Unspecified)::NumAllocations.load());
+    M3_LOG(TestLog, Info, "(After Exit) Core Category Memory Usage: {} bytes, Num Alloc: {}", M3_MEM_CATEGORY(Core)::AllocationSize.load(),
+           M3_MEM_CATEGORY(Core)::NumAllocations.load());
+    M3_LOG(TestLog, Info, "(After Exit) Render Category Memory Usage: {} bytes, Num Alloc: {}", M3_MEM_CATEGORY(Render)::AllocationSize.load(),
+           M3_MEM_CATEGORY(Render)::NumAllocations.load());
 
-    for (size_t idx = 0; idx < 32; ++idx) {
-        vArray.PopBack();
-        vec.pop_back();
-    }
-    M3_ASSERT(vec.back() == vArray.GetLastElement());
-    M3_ASSERT(vec.size() == vArray.GetSize());
+    m3::internal::ReportLiveRenderObjects(m3::render::EGraphicsAPI::D3D12);
+    m3::internal::DumpMemoryLeaks();
 
-    vArray.Clear();
-    M3_ASSERT(vArray.GetSize() == 0);
-    M3_ASSERT(vArray.IsEmpty());
-
-    M3_LOG(TestLog, Trace, "test {}", 25);
-
-    mon3tr::GlobalTimer::GetInstance().BeginNewFrame();
-    std::this_thread::sleep_for(std::chrono::milliseconds(550));
-    mon3tr::GlobalTimer::GetInstance().BeginNewFrame();
-    M3_LOG(TestLog, Trace, "DT: {}, {}", m3::GlobalTimer::GetInstance().GetDeltaTimeMilli(), m3::GlobalTimer::GetInstance().GetDeltaTime());
-
-    m3::Window testWindow{};
-    testWindow.Initialize(m3::WindowDesc{.Title = "test", .Width = 1920, .Height = 1080, .bBorderless = true});
-    testWindow.Shutdown();
-    SDL_Quit();
     return 0;
 }

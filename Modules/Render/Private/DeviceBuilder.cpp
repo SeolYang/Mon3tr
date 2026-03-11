@@ -47,7 +47,7 @@ namespace mon3tr::render {
             {
                 M3_LOG(RenderDeviceBuilder, Warning, "Failed to get debug controller.");
             }
-            if (bDebugControllerAcquired)
+            else
             {
                 debugController->EnableDebugLayer();
                 M3_LOG(RenderDeviceBuilder, Info, "D3D12 debug layer enabled.");
