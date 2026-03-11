@@ -35,7 +35,14 @@ namespace mon3tr {
             startTime_ = nowTimePoint;
         }
 
+        if ((nowTimePoint - fpsCounterBegin_) >= std::chrono::seconds(1)) {
+            fpsCounterBegin_ = nowTimePoint;
+            framesPerSecond_ = fpsCounter_;
+            fpsCounter_ = 0;
+        }
+
         lastTime_ = nowTimePoint;
         ++frameCounter_;
+        ++fpsCounter_;
     }
 }

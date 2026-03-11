@@ -41,6 +41,7 @@ namespace mon3tr {
             return instance;
         }
 
+        // 메인 루프에서 다른 모든 시스템/이벤트 처리에 앞서 호출되어야 합니다.
         void BeginNewFrame();
 
         [[nodiscard]] uint64 GetFrameCounter() const noexcept { return frameCounter_; }
@@ -64,6 +65,11 @@ namespace mon3tr {
             return std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
         }
 
+        /**
+         * @return 지난 1초간 몇개의 프레임을 처리했는지 반환합니다.
+         */
+        [[nodiscard]] uint64 GetFramesPerSecond() const noexcept { return framesPerSecond_; }
+
     private:
         GlobalTimer() = default;
 
@@ -71,6 +77,9 @@ namespace mon3tr {
         std::chrono::high_resolution_clock::time_point startTime_ = std::chrono::high_resolution_clock::now();
         std::chrono::high_resolution_clock::time_point lastTime_ = std::chrono::high_resolution_clock::now();
         uint64                                         frameCounter_ = 0;
+        std::chrono::high_resolution_clock::time_point fpsCounterBegin_ = std::chrono::high_resolution_clock::now();
+        uint64                                         fpsCounter_ = 0;
+        uint64                                         framesPerSecond_ = 0;
         uint64                                         deltaTimeMilli_ = 0;
         double                                         deltaTime_ = 0.0;
     };
