@@ -105,8 +105,6 @@ namespace mon3tr {
 
     private:
         static constexpr size_t kHeaderSize = sizeof(Header);
-#if defined(DEBUG) || defined(_DEBUG)
         uint32_t magicNumber_ = 0;
-#endif
     };
 }

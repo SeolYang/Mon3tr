@@ -65,7 +65,6 @@ M3_DECLARE_MEM_CATEGORY(Core)
 #include <magic_enum/magic_enum.hpp>
 #include <flecs.h>
 #include <ankerl/unordered_dense.h>
-#include <TaskScheduler.h>
 #include <vfspp/VFS.h>
 #include <SDL3/SDL.h>
 #pragma warning(pop)
