@@ -49,7 +49,7 @@ namespace mon3tr::internal {
     static ankerl::unordered_dense::map<void*, AllocationInfo> gAllocationMap;
 #endif
 
-    void* Allocate(const uint64 size, const uint64 alignment, const std::string_view categoryName) {
+    void* Allocate(const uint64 size, const uint64 alignment, [[maybe_unused]] const std::string_view categoryName) {
         M3_PRE_COND(size > 0);
         M3_PRE_COND(alignment > 0 && IsPowerOf2(alignment));
 
@@ -70,7 +70,7 @@ namespace mon3tr::internal {
         return ptr;
     }
 
-    void Deallocate(void* const ptr, const std::string_view categoryName) {
+    void Deallocate(void* const ptr, [[maybe_unused]] const std::string_view categoryName) {
         M3_PRE_COND(ptr != nullptr);
 
 #ifdef M3_TRACK_MEM_ALLOCATIONS

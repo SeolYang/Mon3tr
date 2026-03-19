@@ -37,9 +37,7 @@
         } \
     } while(false)
 #else
-// 릴리즈 모드: 컴파일러 최적화 힌트로 활용
-// 주의: x에 부수 효과가 있으면 안 됨
-#define M3_ASSERT(x) [[assume(x)]]
+#define M3_ASSERT(x) ((void)0)
 #endif
 
 #define M3_PRE_COND(x) M3_ASSERT(x)

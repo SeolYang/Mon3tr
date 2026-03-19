@@ -64,6 +64,7 @@ FetchContent_Declare(
         GIT_TAG v1.92.5-docking
 )
 
+set(FLECS_SHARED OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
         flecs
         GIT_REPOSITORY https://github.com/SanderMertens/flecs.git
@@ -83,6 +84,20 @@ FetchContent_Declare(
         GIT_TAG v5.5.0
 )
 
+set(SDL_CAMERA OFF CACHE BOOL "" FORCE)
+set(SDL_GPU OFF CACHE BOOL "" FORCE)
+set(SDL_OPENGL OFF CACHE BOOL "" FORCE)
+set(SDL_OPENGLES OFF CACHE BOOL "" FORCE)
+set(SDL_RENDER OFF CACHE BOOL "" FORCE)
+set(SDL_RENDER_D3D OFF CACHE BOOL "" FORCE)
+set(SDL_RENDER_D3D11 OFF CACHE BOOL "" FORCE)
+set(SDL_RENDER_D3D12 OFF CACHE BOOL "" FORCE)
+set(SDL_RENDER_GPU OFF CACHE BOOL "" FORCE)
+set(SDL_RENDER_VULKAN OFF CACHE BOOL "" FORCE)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SDL_VULKAN OFF CACHE BOOL "" FORCE)
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
 FetchContent_Declare(
         SDL
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
@@ -107,6 +122,8 @@ FetchContent_Declare(
         GIT_TAG v2.1.1
 )
 
+set(NVRHI_INSTALL OFF CACHE BOOL "" FORCE)
+set(NVRHI_WITH_DX11 OFF CACHE BOOL "" FORCE)
 set(NVRHI_WITH_D3D11 OFF CACHE BOOL "" FORCE)
 set(NVRHI_WITH_D3D12 ON CACHE BOOL "" FORCE)
 set(NVRHI_WITH_VULKAN ON CACHE BOOL "" FORCE)
@@ -116,28 +133,22 @@ FetchContent_Declare(
         GIT_TAG 2ac4b58c355f53827c2e1d0740849ce4d09d5dd6
 )
 
-set(ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(ENKITS_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(
-        enkiTS
-        GIT_REPOSITORY https://github.com/dougbinks/enkiTS.git
-        GIT_TAG v1.11
-)
-
 FetchContent_Declare(
         EASTL
         GIT_REPOSITORY https://github.com/electronicarts/EASTL.git
         GIT_TAG 3.27.01
 )
 
-set(SNMALLOC_STATIC_LIBRARY ON CACHE BOOL "" FORCE)
+set(SNMALLOC_HEADER_ONLY_LIBRARY ON CACHE BOOL "" FORCE)
+set(SNMALLOC_STATIC_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SNMALLOC_BUILD_TESTING OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
         snmalloc
         GIT_REPOSITORY https://github.com/microsoft/snmalloc.git
         GIT_TAG 0.7.3
 )
 
-FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp enkiTS nvrhi EASTL snmalloc)
+FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp nvrhi EASTL snmalloc)
 
 # Third-party
 add_subdirectory(Thirdparty/SimpleMath)

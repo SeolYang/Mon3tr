@@ -46,11 +46,10 @@ target_link_libraries(Mon3trCore PUBLIC
         cereal::cereal
         simdutf::simdutf
         magic_enum
-        flecs::flecs
+        flecs::flecs_static
         unordered_dense::unordered_dense
         Tracy::TracyClient
         SimpleMath
-        enkiTS
         vfspp::vfspp
         SDL3::SDL3
         EASTL
