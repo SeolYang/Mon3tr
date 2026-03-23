@@ -516,4 +516,49 @@ namespace mon3tr::render {
 
         return std::format(kGraphDefFormat, ConcatStringVec(graphContents));
     }
+
+    ERenderGraphCompileResult RenderGraph::Compile() {
+        M3_PRE_COND(!passes_.empty());
+        M3_PRE_COND(renderDevice_ != nullptr);
+
+        scheduler_.Clear();
+        for (RenderPass* pass: passes_) {
+            pass->Setup(scheduler_);
+        }
+
+        if (scheduler_.Schedule() == ERenderGraphScheduleResult::FoundCycleInGraph) {
+            return ERenderGraphCompileResult::FoundCycleInGraph;
+        }
+
+        // @2026-03-21 스케줄러에 포함된 리소스 정보에 따라 리소스 생성
+        // if ExternalResource != nullptr -> ExternalResource 사용
+        M3_ASSERT(textures_.empty());
+        for (const RGSTexture& schedulerTexture: scheduler_.textures_) {
+            if (schedulerTexture.ExternalResource != nullptr) {
+                // @2026-03-23 스케줄러에서 실제로 사용되지 않으니 여기로 move 시켜야하나?
+                textures_.emplace_back(schedulerTexture.ExternalResource);
+            } else {
+                textures_.emplace_back(renderDevice_->createTexture(schedulerTexture.Desc));
+            }
+        }
+
+        M3_ASSERT(buffers_.empty());
+        for (const RGSBuffer& schedulerBuffer: scheduler_.buffers_) {
+            if (schedulerBuffer.ExternalResource != nullptr) {
+                buffers_.emplace_back(schedulerBuffer.ExternalResource);
+            } else {
+                buffers_.emplace_back(renderDevice_->createBuffer(schedulerBuffer.Desc));
+            }
+        }
+
+        return ERenderGraphCompileResult::Success;
+    }
+
+    // 2026-03-21
+    // Inter-Queue Synchronization에 아래 메서드들 사용
+    // renderDevice_->executeCommandLists() -> return instance id
+    // renderDevice_->queueWaitForCommandList()
+    // a command list per pass vs command lists per pass
+    // scheduler.RequestCmdLists(N) -> Execute.. assert(NumCmdLists > 0)
+    // depth -> graphics workload/async workload 각각 -> (Vector로 개수 precalc후 선행 할당, span으로 pass의 요청 subspan 전달, passes[nodeIdx]->Execute(CmdListsSpan) ->
 }

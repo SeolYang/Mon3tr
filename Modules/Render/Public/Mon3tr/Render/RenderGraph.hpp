@@ -56,6 +56,7 @@ namespace mon3tr::render {
 
     class RenderGraphScheduler;
     class RenderGraph;
+
     class RenderPass {
     public:
         virtual ~RenderPass() = default;
@@ -63,24 +64,6 @@ namespace mon3tr::render {
         virtual void Setup(RenderGraphScheduler& scheduler) = 0;
 
         virtual void Execute(RenderGraph& graph) = 0;
-    };
-
-    class RenderGraph {
-    public:
-        [[nodiscard]] ERenderGraphCompileResult Compile();
-
-        void Execute();
-
-        void Clear();
-
-        // void Reset(); // 리소스들 및 패스들의 완전한 할당 해제
-
-    private:
-        bool                                                  bIsCompiled = false;
-        Vector<nvrhi::TextureHandle, M3_MEM_CATEGORY(Render)> textures_;
-        Vector<nvrhi::BufferHandle, M3_MEM_CATEGORY(Render)>  buffers_;
-
-        Vector<RenderPass*, M3_MEM_CATEGORY(Render)> passes_;
     };
 
     struct RGSResourceVersion {
@@ -202,6 +185,8 @@ namespace mon3tr::render {
     };
 
     class RenderGraphScheduler {
+        friend class RenderGraph;
+
     public:
         void BeginNewPass(bool bIsEnabled, std::string_view debugName = "None");
 
@@ -231,8 +216,11 @@ namespace mon3tr::render {
 
     private:
         bool TopologicalSort(Vector<uint16>& nodeDepths, uint16& maxNodeDepth);
+
         void GatherNodesToDepth(const Vector<uint16>& nodeDepths, const uint16 maxNodeDepth);
+
         void UpdatePerResourceVersionDepthInfo(const Vector<uint16>& nodeDepths);
+
         void CollectDepthStateTransitionsWithSyncPoint(const Vector<uint16>& nodeDepths);
 
         [[nodiscard]] uint32 GetCurrentNodeIndex() const noexcept { return static_cast<uint32>(nodes_.size() - 1); }
@@ -321,5 +309,27 @@ namespace mon3tr::render {
 
         // depths_[0] = D0 -> D1 transitions 포함, 컴파일 이후 유효
         Vector<RGSDepth, M3_MEM_CATEGORY(Render)> depths_;
+    };
+
+    class RenderGraph {
+    public:
+        [[nodiscard]] ERenderGraphCompileResult Compile();
+
+        void Execute();
+
+        void Clear();
+
+        // void Reset(); // 리소스들 및 패스들의 완전한 할당 해제
+
+    private:
+        nvrhi::DeviceHandle renderDevice_;
+
+        bool                                                  bIsCompiled = false;
+        Vector<nvrhi::TextureHandle, M3_MEM_CATEGORY(Render)> textures_;
+        Vector<nvrhi::BufferHandle, M3_MEM_CATEGORY(Render)>  buffers_;
+
+        Vector<RenderPass*, M3_MEM_CATEGORY(Render)> passes_;
+
+        RenderGraphScheduler scheduler_;
     };
 }
