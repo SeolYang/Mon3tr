@@ -16,13 +16,15 @@ set(Mon3trRenderPrivate
         Private/SwapChain_DX12.cpp
         Private/FrameManager.cpp
         Private/FrameManager_DX12.hpp
-        Private/FrameManager_DX12.cpp)
+        Private/FrameManager_DX12.cpp
+        Private/RenderGraph.cpp)
 set(Mon3trRenderPublic
         Public/Mon3tr/Render/RenderMinimal.hpp
         Public/Mon3tr/Render/DeviceBuilder.hpp
         Public/Mon3tr/Render/SwapChain.hpp
         Public/Mon3tr/Render/FrameManager.hpp
-        Public/Mon3tr/Render/Renderer.hpp)
+        Public/Mon3tr/Render/Renderer.hpp
+        Public/Mon3tr/Render/RenderGraph.hpp)
 
 target_sources(Mon3trRender PRIVATE
         ${Mon3trRenderPrivate})

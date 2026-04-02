@@ -19,3 +19,35 @@
  * SOFTWARE.
  */
 #pragma once
+#include <Mon3tr/Core/CoreMinimal.hpp>
+#include <Mon3tr/Render/DeviceBuilder.hpp>
+
+namespace mon3tr {
+    class Window;
+}
+
+enum class EApplicationInitResult {
+    Success,
+};
+
+class Application {
+public:
+    Application() = default;
+
+    Application(const Application&) = delete;
+
+    Application& operator=(const Application&) = delete;
+
+    Application(Application&&) noexcept = delete;
+
+    Application& operator=(Application&&) noexcept = delete;
+
+    ~Application() = default;
+
+    EApplicationInitResult Initialize();
+    void Shutdown();
+
+private:
+    m3::Ptr<m3::Window> window_{nullptr};
+    nvrhi::DeviceHandle renderDevice_{nullptr};
+};
