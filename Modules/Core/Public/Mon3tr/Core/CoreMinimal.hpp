@@ -67,4 +67,5 @@ M3_DECLARE_MEM_CATEGORY(Core)
 #include <ankerl/unordered_dense.h>
 #include <vfspp/VFS.h>
 #include <SDL3/SDL.h>
+#include <simdjson/simdjson.h>
 #pragma warning(pop)

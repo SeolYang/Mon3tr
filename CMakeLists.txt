@@ -148,7 +148,19 @@ FetchContent_Declare(
         GIT_TAG 0.7.3
 )
 
-FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp nvrhi EASTL snmalloc)
+FetchContent_Declare(
+        CrossGuid
+        GIT_REPOSITORY https://github.com/graeme-hill/crossguid.git
+        GIT_TAG ca1bf4b810e2d188d04cb6286f957008ee1b7681
+)
+
+FetchContent_Declare(
+        simdjson
+        GIT_REPOSITORY https://github.com/simdjson/simdjson.git
+        GIT_TAG v4.6.0
+)
+
+FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp nvrhi EASTL snmalloc CrossGuid simdjson)
 
 # Third-party
 add_subdirectory(Thirdparty/SimpleMath)
@@ -156,4 +168,5 @@ add_subdirectory(Thirdparty/SimpleMath)
 # Modules & Sub-projects
 add_subdirectory(Modules/Core)
 add_subdirectory(Modules/Render)
+add_subdirectory(Modules/Asset)
 add_subdirectory(Sandbox)

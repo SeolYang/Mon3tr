@@ -704,9 +704,7 @@ namespace mon3tr::render {
                                 nvrhi::CommandQueue::Compute);
                         }
                     });
-
             depthSubmissionTask.depends_on(depthExecutionSystem);
-
             depthSubmissionTasks_.emplace_back(depthSubmissionTask);
         }
 

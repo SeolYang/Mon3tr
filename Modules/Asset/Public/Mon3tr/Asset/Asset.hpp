@@ -19,20 +19,13 @@
  * SOFTWARE.
  */
 #pragma once
-#include <cstdint>
-#include <crossguid/guid.hpp>
+#include <Mon3tr/Core/CoreMinimal.hpp>
 
-namespace mon3tr {
-    using uint8 = uint8_t;
-    using uint16 = uint16_t;
-    using uint32 = uint32_t;
-    using uint64 = uint64_t;
-    using int8 = int8_t;
-    using int16 = int16_t;
-    using int32 = int32_t;
-    using int64 = int64_t;
-    using f32 = float;
-    using f64 = double;
+namespace mon3tr::asset {
+    class Asset {
+    public:
+        virtual ~Asset() = default;
 
-    using Guid = xg::Guid;
+    private:
+    };
 }

@@ -54,6 +54,8 @@ target_link_libraries(Mon3trCore PUBLIC
         SDL3::SDL3
         EASTL
         snmalloc
+        crossguid
+        simdjson::simdjson
 )
 
 target_compile_options(Mon3trCore PRIVATE

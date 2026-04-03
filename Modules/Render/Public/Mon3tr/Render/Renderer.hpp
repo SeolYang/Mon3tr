@@ -19,20 +19,25 @@
  * SOFTWARE.
  */
 #pragma once
-#include <cstdint>
-#include <crossguid/guid.hpp>
+#include <Mon3tr/Core/CoreMinimal.hpp>
+#include <Mon3tr/Core/System.hpp>
 
-namespace mon3tr {
-    using uint8 = uint8_t;
-    using uint16 = uint16_t;
-    using uint32 = uint32_t;
-    using uint64 = uint64_t;
-    using int8 = int8_t;
-    using int16 = int16_t;
-    using int32 = int32_t;
-    using int64 = int64_t;
-    using f32 = float;
-    using f64 = double;
+namespace mon3tr::render {
+    /**
+     * 렌더러 인터페이스
+     */
+    class Renderer : public System {
+    public:
+        ~Renderer() override = default;
 
-    using Guid = xg::Guid;
+        virtual void BeinFrame() = 0;
+
+        virtual void EndFrame() = 0;
+
+        virtual void OnBackBufferResized(const uint32 width, const uint32 height, const uint32 backBufferCount) {
+        }
+
+    protected:
+        Renderer() = default;
+    };
 }
