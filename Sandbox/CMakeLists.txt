@@ -17,6 +17,7 @@ target_link_libraries(Mon3trSandbox
         PRIVATE
         Mon3trCore
         Mon3trRender
+        Mon3trAsset
 )
 
 target_compile_options(Mon3trSandbox PRIVATE

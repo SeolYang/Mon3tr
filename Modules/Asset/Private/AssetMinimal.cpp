@@ -18,25 +18,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
-#include <Mon3tr/Core/CoreMinimal.hpp>
 #include <Mon3tr/Asset/AssetMinimal.hpp>
 
-namespace mon3tr::asset {
-    // Asset을 상속 받는 에셋의 경우 EAssetType의 요소와 1:1로 대응되어야 한다
-    // 또한 public static constexpr 멤버 상수로 kAssetType을 정의해야 하며, GetType() 함수를 오버라이드 하여 정의한 kAssetType을 반환하여야 한다.
-    class Asset {
-    public:
-        virtual ~Asset() = default;
-
-        [[nodiscard]] Guid GetGuid() const noexcept { return guid_; }
-
-        virtual EAssetType GetType() const noexcept = 0;
-
-    private:
-        std::atomic_uint64_t refCounter_{0};
-        Guid guid_;
-        fs::path label_;
-        uint64 dataSize_ = 0;
-    };
-}
+M3_DEFINE_MEM_CATEGORY(Asset);

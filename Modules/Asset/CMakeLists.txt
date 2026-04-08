@@ -8,7 +8,8 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/Private
 )
 
-# set(Mon3trAssetPrivate)
+set(Mon3trAssetPrivate
+        Private/AssetMinimal.cpp)
 set(Mon3trAssetPublic
         Public/Mon3tr/Asset/Asset.hpp)
 
