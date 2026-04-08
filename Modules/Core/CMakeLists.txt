@@ -56,6 +56,7 @@ target_link_libraries(Mon3trCore PUBLIC
         snmalloc
         crossguid
         simdjson::simdjson
+        nlohmann_json
 )
 
 target_compile_options(Mon3trCore PRIVATE

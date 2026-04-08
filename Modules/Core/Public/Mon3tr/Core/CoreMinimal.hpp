@@ -55,6 +55,10 @@
 #include <Mon3tr/Core/Container.hpp>
 namespace m3 = mon3tr;
 
+namespace mon3tr {
+    namespace fs = std::filesystem;
+}
+
 M3_DECLARE_MEM_CATEGORY(Core)
 
 /* External Libs */
@@ -68,4 +72,5 @@ M3_DECLARE_MEM_CATEGORY(Core)
 #include <vfspp/VFS.h>
 #include <SDL3/SDL.h>
 #include <simdjson/simdjson.h>
+#include <nlohmann/json.hpp>
 #pragma warning(pop)

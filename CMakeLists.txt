@@ -160,7 +160,13 @@ FetchContent_Declare(
         GIT_TAG v4.6.0
 )
 
-FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp nvrhi EASTL snmalloc CrossGuid simdjson)
+FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.12.0
+)
+
+FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp nvrhi EASTL snmalloc CrossGuid simdjson nlohmann_json)
 
 # Third-party
 add_subdirectory(Thirdparty/SimpleMath)
