@@ -148,6 +148,7 @@ FetchContent_Declare(
         GIT_TAG 0.7.3
 )
 
+set(CROSSGUID_TESTS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
         CrossGuid
         GIT_REPOSITORY https://github.com/graeme-hill/crossguid.git
@@ -168,8 +169,36 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp nvrhi EASTL snmalloc CrossGuid simdjson nlohmann_json)
 
+FetchContent_Declare(
+        dxc_binaries
+        URL https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.9.2602/dxc_2026_02_20.zip
+        URL_HASH SHA256=a1e89031421cf3c1fca6627766ab3020ca4f962ac7e2caa7fab2b33a8436151e # 실제 파일의 SHA256 해시 권장
+)
+FetchContent_MakeAvailable(dxc_binaries)
+
+add_library(DXC::dxcompiler INTERFACE IMPORTED GLOBAL)
+
+set(DXC_INCLUDE_DIR "${dxc_binaries_SOURCE_DIR}/inc")
+set(DXC_LIB_DIR "${dxc_binaries_SOURCE_DIR}/lib/x64")
+set(DXC_BIN_DIR "${dxc_binaries_SOURCE_DIR}/bin/x64")
+
+set_target_properties(DXC::dxcompiler PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${DXC_INCLUDE_DIR}"
+        INTERFACE_LINK_LIBRARIES "${DXC_LIB_DIR}/dxcompiler.lib;${DXC_LIB_DIR}/dxil.lib"
+)
+
+function(CopyDxcBinsToTarget TARGET_NAME)
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${DXC_BIN_DIR}/dxcompiler.dll"
+            "${DXC_BIN_DIR}/dxil.dll"
+            $<TARGET_FILE_DIR:${TARGET_NAME}>
+            COMMENT "Copying DXC DLLs to binary directory for ${TARGET_NAME}..."
+    )
+endfunction()
+
 # Third-party
-add_subdirectory(Thirdparty/SimpleMath)
+add_subdirectory(ThirdParty/SimpleMath)
 
 # Modules & Sub-projects
 add_subdirectory(Modules/Core)

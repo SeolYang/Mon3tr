@@ -17,14 +17,16 @@ set(Mon3trRenderPrivate
         Private/FrameManager.cpp
         Private/FrameManager_DX12.hpp
         Private/FrameManager_DX12.cpp
-        Private/RenderGraph.cpp)
+        Private/RenderGraph.cpp
+        Private/Shader.cpp)
 set(Mon3trRenderPublic
         Public/Mon3tr/Render/RenderMinimal.hpp
         Public/Mon3tr/Render/DeviceBuilder.hpp
         Public/Mon3tr/Render/SwapChain.hpp
         Public/Mon3tr/Render/FrameManager.hpp
         Public/Mon3tr/Render/Renderer.hpp
-        Public/Mon3tr/Render/RenderGraph.hpp)
+        Public/Mon3tr/Render/RenderGraph.hpp
+        Public/Mon3tr/Render/Shader.hpp)
 
 target_sources(Mon3trRender PRIVATE
         ${Mon3trRenderPrivate})
@@ -41,6 +43,9 @@ target_link_libraries(Mon3trRender PUBLIC
 
         dxgi.lib
         dxguid.lib
+
+        PRIVATE
+        DXC::dxcompiler
 )
 
 target_compile_options(Mon3trRender PRIVATE
