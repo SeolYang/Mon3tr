@@ -26,17 +26,26 @@ namespace mon3tr::asset {
     // Asset을 상속 받는 에셋의 경우 EAssetType의 요소와 1:1로 대응되어야 한다
     // 또한 public static constexpr 멤버 상수로 kAssetType을 정의해야 하며, GetType() 함수를 오버라이드 하여 정의한 kAssetType을 반환하여야 한다.
     class Asset {
+        friend class AssetManager;
+
     public:
+        Asset(const Asset&) = delete;
+
+        Asset(Asset&&) noexcept = delete;
+
         virtual ~Asset() = default;
+
+        Asset& operator=(const Asset&) = delete;
+
+        Asset& operator=(Asset&&) noexcept = delete;
 
         [[nodiscard]] Guid GetGuid() const noexcept { return guid_; }
 
         virtual EAssetType GetType() const noexcept = 0;
 
     private:
-        std::atomic_uint64_t refCounter_{0};
-        Guid guid_;
-        fs::path label_;
-        uint64 dataSize_ = 0;
+        std::atomic_uint64_t refCounter_{1};
+        Guid                 guid_;
+        fs::path             label_;
     };
 }

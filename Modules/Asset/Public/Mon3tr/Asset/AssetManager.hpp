@@ -24,6 +24,8 @@
 #include <Mon3tr/Asset/AssetMinimal.hpp>
 #include <Mon3tr/Asset/Asset.hpp>
 
+M3_DECLARE_LOG_CATEGORY(AssetManager);
+
 namespace mon3tr::asset {
     enum class EAssetManagerInitializeResult {
         Success,
@@ -35,6 +37,7 @@ namespace mon3tr::asset {
         RawFileDoesNotExist,
         InvalidLabel,
         ImporterFailure,
+        AssetBinaryDoesNotExistAfterImport,
     };
 
     enum class EAssetLoadResult {
@@ -42,11 +45,13 @@ namespace mon3tr::asset {
         InvalidAssetGuid,
         AssetDoesNotExist,
         AssetMetadataDoesNotExist,
+        FailedToOpenAssetMetadata,
+        EmptyAssetMetadata,
         AssetMetadataValidationFailed,
         LoaderFailure,
     };
 
-    struct GeneralAssetImportDesc {
+    struct AssetImportDesc {
         fs::path RawFilePath;
 
         // 한번 Import 되면 에셋에 GUID가 부여되고 에셋을 사람이 쉽게 인식하기 위한 라벨이 붙혀진다.
@@ -54,8 +59,28 @@ namespace mon3tr::asset {
         fs::path Label;
     };
 
-    struct GeneralAssetLoadDesc {
+    template<typename Importer>
+    struct AssetImportPayload {
+        const AssetImportDesc* ImportDesc = nullptr;
+        const Importer::Desc*  ImporterSpecificDesc = nullptr;
+
+        nlohmann::json* MetadataRoot = nullptr;
+
+        fs::path AssetBinaryPath;
+    };
+
+    struct AssetLoadDesc {
         Guid AssetGuid;
+    };
+
+    template<typename Loader>
+    struct AssetLoadPayload {
+        const AssetLoadDesc* LoadDesc = nullptr;
+        const Loader::Desc*  LoaderSpecificDesc = nullptr;
+
+        fs::path AssetBinaryPath;
+
+        const nlohmann::json* MetadataRoot = nullptr;
     };
 
     class AssetManager;
@@ -64,20 +89,28 @@ namespace mon3tr::asset {
     // smart handle for asset!
     class AssetHandle {
     public:
-        // @todo Impl Copy/Move Constructor & operator which increase ref count of asset
-        // @todo Impl Destructor which decrease ref count of asset (call unload internally)
+        AssetHandle() = default;
+
+        AssetHandle(AssetManager& assetManager, const Handle<Asset*> rawHandle);
+
+        // 만약 핸들이 유효하다면, 핸들을 복사하고 해당 핸들에 해당하는 에셋의 레퍼런스 카운트를 증가시킨다. (AssetManager::Ref)
+        AssetHandle(const AssetHandle& other);
+
+        AssetHandle& operator=(const AssetHandle& rhs);
+
+        // 핸들의 유/무효와 관계없이 핸들을 이동시킨다. 레퍼런스 카운트에 아무런 영향을 주지 않는다. 이동된 에셋 핸들(rhs)는 이동후 무효화 된다.
+        AssetHandle(AssetHandle&& other) noexcept;
+
+        AssetHandle& operator=(AssetHandle&& rhs) noexcept;
+
+        // 핸들이 유효하다면 레퍼런스 카운트를 감소 시킨다. (AssetManager::Unref)
+        ~AssetHandle();
+
+        const Asset* Get() const;
 
         template<typename T>
         const T* Cast() const {
-            if (assetManager_ == nullptr) {
-                return nullptr;
-            }
-
-            if (handle_.IsNull()) {
-                return nullptr;
-            }
-
-            const Asset* asset = GetAssetFromManager();
+            const Asset* asset = Get();
             if (asset == nullptr) {
                 return nullptr;
             }
@@ -89,24 +122,42 @@ namespace mon3tr::asset {
             return static_cast<const T*>(asset);
         }
 
+        // Cast를 통해 바
         template<typename T>
         T* Cast() {
             return const_cast<T*>(const_cast<const AssetHandle*>(this)->Cast<T>());
         }
 
-        // 강제로 Unref 호출: 호출 이후 핸들은 무효화
-        void Unload();
+        // 수동으로 에셋 핸들을 무효화 시킨다. 강제로 Unref 호출을 발생시키며, 호출 당사자 에셋 핸들은 무효화된다.
+        void Destruct();
 
     private:
-        const Asset* GetAssetFromManager() const;
+        void Ref();
+
+        void Unref();
 
     private:
-        AssetManager* assetManager_ = nullptr;
-        Handle<Asset> handle_;
+        AssetManager*  assetManager_ = nullptr;
+        Handle<Asset*> handle_{};
     };
 
     class AssetManager : public System {
         friend class AssetHandle;
+
+        struct Garbage {
+            Handle<Asset*>                                 Target{};
+            std::chrono::high_resolution_clock::time_point QueuedTime{};
+        };
+
+        struct GarbageBuffer {
+            Queue<Garbage, M3_MEM_CATEGORY(Asset)> Buffer{};
+            mutable std::mutex                     Mutex{};
+        };
+
+        struct FinalPhaseGarbage {
+            Asset*         Target = nullptr;
+            Handle<Asset*> Handle{};
+        };
 
     public:
         AssetManager(const AssetManager&) = delete;
@@ -124,38 +175,41 @@ namespace mon3tr::asset {
         // GENERATED_GUID.m3tr: Binary
         // GENERATED_GUID.m3mt: Metadata
         template<typename Importer>
-        EAssetImportResult Import(const GeneralAssetImportDesc& generalImportDesc, const Importer::Desc& importerDesc) {
-            if (generalImportDesc.RawFilePath.empty()) {
+        EAssetImportResult Import(const AssetImportDesc& assetImportDesc, const Importer::Desc& importerDesc) {
+            if (assetImportDesc.RawFilePath.empty()) {
                 return EAssetImportResult::EmptyRawFilePath;
             }
 
-            if (!fs::exists(generalImportDesc.RawFilePath)) {
+            if (!fs::exists(assetImportDesc.RawFilePath)) {
                 return EAssetImportResult::RawFileDoesNotExist;
             }
 
             const Guid newGuid = xg::newGuid();
 
-            constexpr std::string_view kAssetBinaryPathFormat = "Assets\\{}.m3tr";
-            const fs::path             newAssetBinaryPath = std::format(kAssetBinaryPathFormat, newGuid.str());
-            std::ofstream              assetFileStream{newAssetBinaryPath, std::ios::out | std::ios::binary | std::ios::trunc};
-            nlohmann::json             metadataRoot{};
-            const auto                 importResult = Importer::Import(generalImportDesc, importerDesc, metadataRoot, assetFileStream);
+            const fs::path newAssetBinaryPath = CreateBinaryPath(newGuid);
+            nlohmann::json metadataRoot{};
+            const auto     importResult = Importer::Import(AssetImportPayload<Importer>{
+                .ImportDesc = &assetImportDesc,
+                .ImporterSpecificDesc = &importerDesc,
+                .MetadataRoot = &metadataRoot,
+                .AssetBinaryPath = newAssetBinaryPath
+            });
             if (importResult != decltype(importResult)::Success) {
+                M3_LOG(AssetManager, Error, "[{}] Failed to import asset {}. => {}", Importer::kName, assetImportDesc.RawFilePath, importResult);
                 fs::remove(newAssetBinaryPath);
                 return EAssetImportResult::ImporterFailure;
+            } else if (!fs::exists(newAssetBinaryPath)) {
+                return EAssetImportResult::AssetBinaryDoesNotExistAfterImport;
             }
-            assetFileStream.close();
 
             // record general asset metadata
             nlohmann::json generalMetadata;
-            generalMetadata["Guid"] = newGuid.str();
-            generalMetadata["Label"] = generalImportDesc.Label;
-            generalMetadata["Version"] = Importer::kVersion;
-            metadataRoot["General"] = generalMetadata;
+            generalMetadata[kLabelMetadataJsonKey] = assetImportDesc.Label;
+            generalMetadata[kVersionMetadataJsonKey] = Importer::kVersion;
+            metadataRoot[kGeneralMetadataJsonKey] = generalMetadata;
 
-            constexpr std::string_view kAssetMetadataPathFormat = "Assets\\{}.m3mt";
-            const fs::path             newAssetMetadataPath = std::format(kAssetMetadataPathFormat, newGuid.str());
-            std::ofstream              assetMetadataStream{newAssetMetadataPath, std::ios::out | std::ios::trunc};
+            const fs::path newAssetMetadataPath = CreateMetadataPath(newGuid);
+            std::ofstream  assetMetadataStream{newAssetMetadataPath, std::ios::out | std::ios::trunc};
             assetMetadataStream << metadataRoot.dump();
             assetMetadataStream.close();
 
@@ -163,36 +217,123 @@ namespace mon3tr::asset {
         }
 
         template<typename Loader>
-        std::expected<AssetHandle, EAssetLoadResult> Load(const GeneralAssetLoadDesc& generalDesc, const Loader::Desc& loaderDesc);
+        std::expected<AssetHandle, EAssetLoadResult> Load(const AssetLoadDesc& assetLoadDesc, const Loader::Desc& loaderDesc) {
+            //! Asset Table shared lock
+            {
+                std::shared_lock assetTableLock{assetTableMutex_};
+                if (const auto foundItr = assetTable_.find(assetLoadDesc.AssetGuid);
+                    foundItr != assetTable_.end()) {
+                    return AssetHandle{*this, foundItr->second};
+                }
+            }
+            //! Asset Table shared unlock
 
-        // Unload: AssetHandle에 의해서 Unload 로직이 모두 처리되므로 더이상 필요없지 않은가?
+            const fs::path metadataPath = CreateMetadataPath(assetLoadDesc.AssetGuid);
+            if (!fs::exists(metadataPath)) {
+                return std::unexpected{EAssetLoadResult::AssetMetadataDoesNotExist};
+            }
+            std::ifstream metadataStream{metadataPath, std::ios::in};
+            if (!metadataStream.is_open()) {
+                return std::unexpected{EAssetLoadResult::FailedToOpenAssetMetadata};
+            }
+            nlohmann::json metadataRoot = nlohmann::json::parse(metadataStream, nullptr, false);
+            metadataStream.close();
+
+            const nlohmann::json generalMetadata = metadataRoot.value(kGeneralMetadataJsonKey, nlohmann::json{});
+            const int64          version = generalMetadata.value(kVersionMetadataJsonKey, -1);
+            fs::path             label = generalMetadata.value(kLabelMetadataJsonKey, "Unknown");
+            if (version != Loader::kVersion) {
+                M3_LOG(AssetManager, Warning, "[{}] Loader Versions mismatch with asset {}({}) metadata version. Expected: {}, Found: {}",
+                       Loader::kName,
+                       label, assetLoadDesc.AssetGuid,
+                       Loader::kVersion, version);
+            }
+
+            // @todo async load는 어떻게 처리? Loader의 Load 부분만 따로 async? flecs와 유기적으로 연동가능한지?
+            using ELoadResult = Loader::ELoadResult;
+            static_assert(std::is_enum_v<ELoadResult>);
+            std::expected<Asset*, ELoadResult> expectedAsset = Loader::Load(AssetLoadPayload{
+                .LoadDesc = &assetLoadDesc,
+                .LoaderSpecificDesc = &loaderDesc,
+                .AssetPath = CreateBinaryPath(assetLoadDesc.AssetGuid),
+                .MetadataRoot = &metadataRoot,
+            });
+            if (!expectedAsset.has_value()) {
+                M3_LOG(AssetManager, Error, "[{}] Failed to load asset {}({}). Reason: {}",
+                       Loader::kName,
+                       label, assetLoadDesc.AssetGuid,
+                       expectedAsset.error());
+                return std::unexpected{EAssetLoadResult::LoaderFailure};
+            }
+
+            Asset* asset = expectedAsset.value();
+            asset->guid_ = assetLoadDesc.AssetGuid;
+            asset->label_ = std::move(label);
+
+            //! Handle Manager lock
+            handleManagerMutex_.lock();
+            const Handle<Asset*> newRawHandle = handleManager_.Create(asset);
+            handleManagerMutex_.unlock();
+            //! Handle Manager unlock
+
+            //! Asset Table lock
+            assetTableMutex_.lock();
+            assetTable_[assetLoadDesc.AssetGuid] = newRawHandle;
+            assetTableMutex_.unlock();
+            //! Asset Table unlock
+
+            return AssetHandle{*this, newRawHandle};
+        }
+
+        // @todo Unload: AssetHandle에 의해서 Unload 로직이 모두 처리되므로 더이상 필요없지 않은가? 강제 Unload 필요? 또는 garbage를 강제로 해제?
+
+        // 항상 메인 스레드에서만 실행되어야함!
+        void RunGarbageCollect();
+
+        [[nodiscard]] std::chrono::seconds GetGarbageLifetime() const noexcept {
+            return garbageLifetime_;
+        }
 
     private:
-        const Asset* Lookup(Handle<Asset> handle) const;
+        // 에셋이 해당 핸들에 대해 유효하더라도, 에셋의 ref count가 0이면 null을 반환해야 한다.
+        const Asset* Lookup(Handle<Asset*> handle, bool bShouldIgnoreZeroRefCount = true) const;
 
         // AssetHandle의 복사와 소멸(destruction)은 Ref/Unref를 호출함
-        void Ref(const Handle<Asset> handle);
+        void Ref(Handle<Asset*> handle);
 
-        void Unref(const Handle<Asset> handle);
+        void Unref(const Handle<Asset*> handle);
+
+        [[nodiscard]] GarbageBuffer& GetCurrentGarbageBuffer() noexcept { return garbageBuffers_[garbageCollectCounter_ % kNumGarbageBuffer]; }
+        [[nodiscard]] GarbageBuffer& GetNextGarbageBuffer() noexcept { return garbageBuffers_[(garbageCollectCounter_ + 1) % kNumGarbageBuffer]; }
+
+        static fs::path CreateBinaryPath(const Guid& guid) {
+            M3_ASSERT(guid.isValid());
+            constexpr std::string_view kAssetBinaryPathFormat = "Assets\\{}.m3tr";
+            return std::format(kAssetBinaryPathFormat, guid.str());
+        }
+
+        static fs::path CreateMetadataPath(const Guid& guid) {
+            M3_ASSERT(guid.isValid());
+            constexpr std::string_view kAssetMetadataPathFormat = "Assets\\{}.m3mt";
+            return std::format(kAssetMetadataPathFormat, guid.str());
+        }
 
     private:
-        ankerl::unordered_dense::map<Guid, Handle<Asset> > assetTable_;
+        mutable std::shared_mutex                           assetTableMutex_;
+        ankerl::unordered_dense::map<Guid, Handle<Asset*> > assetTable_;
 
         mutable std::shared_mutex handleManagerMutex_;
         HandleManager<Asset*>     handleManager_;
 
-        // Unload->If ref count == 0 -> treat as garbage -> queue_(N%2)->enqueue(garbage)
-        // # at the end of current frame
-        // if delta time(CurrentTime - QueuedTime) >= x
-        //  if still ref count == 0 then remove Target!
-        //  else ignore
-        // else
-        //   queue_(N+1%2)->enqueue(garbage)
-        struct Garbage {
-            Handle<Asset>                                  Target;
-            std::chrono::high_resolution_clock::time_point QueuedTime;
-        };
+        constexpr static uint64                 kNumGarbageBuffer = 2;
+        std::atomic_uint64_t                    garbageCollectCounter_ = 0;
+        std::chrono::seconds                    garbageLifetime_ = std::chrono::seconds{60};
+        Array<GarbageBuffer, kNumGarbageBuffer> garbageBuffers_{};
+        Vector<FinalPhaseGarbage>               finalPhasedGarbageBuffer_{};
 
-        Array<Queue<Garbage, M3_MEM_CATEGORY(Asset)>, 2> GarbageQueues{};
+    private:
+        static constexpr std::string_view kGeneralMetadataJsonKey = "General";
+        static constexpr std::string_view kVersionMetadataJsonKey = "Version";
+        static constexpr std::string_view kLabelMetadataJsonKey = "Label";
     };
 }
