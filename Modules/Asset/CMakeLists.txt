@@ -9,9 +9,12 @@ target_include_directories(
 )
 
 set(Mon3trAssetPrivate
-        Private/AssetMinimal.cpp)
+        Private/AssetMinimal.cpp
+        Private/AssetManager.cpp)
 set(Mon3trAssetPublic
-        Public/Mon3tr/Asset/Asset.hpp)
+        Public/Mon3tr/Asset/AssetMinimal.hpp
+        Public/Mon3tr/Asset/Asset.hpp
+        Public/Mon3tr/Asset/AssetManager.hpp)
 
 target_sources(Mon3trAsset PRIVATE
         ${Mon3trAssetPrivate})

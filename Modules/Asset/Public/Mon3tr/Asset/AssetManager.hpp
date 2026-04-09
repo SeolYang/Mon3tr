@@ -122,7 +122,6 @@ namespace mon3tr::asset {
             return static_cast<const T*>(asset);
         }
 
-        // Cast를 통해 바
         template<typename T>
         T* Cast() {
             return const_cast<T*>(const_cast<const AssetHandle*>(this)->Cast<T>());
@@ -160,6 +159,9 @@ namespace mon3tr::asset {
         };
 
     public:
+        // 현재로서는 AssetManager는 별도 초기화가 필요없는 독립적인 System이다. 다만, 여전히 Shutdown을 필요로 하다.
+        AssetManager();
+
         AssetManager(const AssetManager&) = delete;
 
         AssetManager& operator=(const AssetManager&) = delete;

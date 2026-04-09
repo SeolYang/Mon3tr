@@ -21,6 +21,7 @@
 #pragma once
 #include <Mon3tr/Core/Platform.hpp>
 #include <Mon3tr/Core/Types.hpp>
+#include <Mon3tr/Core/Assertion.hpp>
 
 #define M3_DECLARE_MEM_CATEGORY(MEM_CATEGORY) \
 namespace mon3tr::internal::memory { \

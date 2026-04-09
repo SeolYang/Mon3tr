@@ -87,6 +87,10 @@ namespace mon3tr::asset {
         }
     }
 
+    AssetManager::AssetManager() {
+        MarkAsInitialized();
+    }
+
     void AssetManager::RunGarbageCollect() {
         // 메인 스레드에서만 실행되지만, Garbage Collect가 실행되는 와중에 다른 스레드에서 Unref를 시도하지 않는다는 보장을 할 수 없기에
         // 현재 Garbage Buffer에 대해서는 lock을 걸어준다. 다만, garbage collect counter를 증가시키는건
