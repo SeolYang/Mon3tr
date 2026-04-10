@@ -15,7 +15,8 @@ set(Mon3trCorePrivate
         Private/HandleManager.cpp
         Private/Window.cpp
         Private/GlobalTimer.cpp
-        Private/Memory.cpp)
+        Private/Memory.cpp
+        Private/FileIO.cpp)
 set(Mon3trCorePublic
         Public/Mon3tr/Core/Assertion.hpp
         Public/Mon3tr/Core/CoreMinimal.hpp
@@ -32,7 +33,8 @@ set(Mon3trCorePublic
         Public/Mon3tr/Core/Window.hpp
         Public/Mon3tr/Core/Profiler.hpp
         Public/Mon3tr/Core/GlobalTimer.hpp
-        Public/Mon3tr/Core/Allocator.hpp)
+        Public/Mon3tr/Core/Allocator.hpp
+        Public/Mon3tr/Core/FileIO.hpp)
 
 target_sources(Mon3trCore PRIVATE
         ${Mon3trCorePrivate})
