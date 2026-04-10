@@ -43,7 +43,7 @@ namespace mon3tr {
     }
 
     bool WriteBlobToFile(const fs::path& blobFilePath, const std::span<const uint8> blob) {
-        if (blob.size() == 0) {
+        if (blob.data() == nullptr || blob.size() == 0) {
             return false;
         }
 
