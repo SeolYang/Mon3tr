@@ -23,7 +23,7 @@
 
 namespace mon3tr {
     namespace internal {
-        constexpr uint64 kNullRawHandle = std::numeric_limits<uint64>::max();
+        constexpr uint64 kNullRawHandle = 0xFFFFFFFFFFFFFFFFui64;
     }
 
     template<typename Ty>
