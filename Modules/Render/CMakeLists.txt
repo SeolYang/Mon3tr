@@ -19,7 +19,8 @@ set(Mon3trRenderPrivate
         Private/FrameManager_DX12.hpp
         Private/FrameManager_DX12.cpp
         Private/RenderGraph.cpp
-        Private/Shader.cpp)
+        Private/Shader.cpp
+        Private/ShaderCompiler.cpp)
 set(Mon3trRenderPublic
         Public/Mon3tr/Render/RenderMinimal.hpp
         Public/Mon3tr/Render/DeviceBuilder.hpp
@@ -27,7 +28,8 @@ set(Mon3trRenderPublic
         Public/Mon3tr/Render/FrameManager.hpp
         Public/Mon3tr/Render/Renderer.hpp
         Public/Mon3tr/Render/RenderGraph.hpp
-        Public/Mon3tr/Render/Shader.hpp)
+        Public/Mon3tr/Render/Shader.hpp
+        Public/Mon3tr/Render/ShaderCompiler.hpp)
 
 target_sources(Mon3trRender PRIVATE
         ${Mon3trRenderPrivate})
@@ -43,14 +45,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(AgilitySDK)
 
 function(CopyAgilitySdkBinsToTarget TARGET_NAME)
-add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${TARGET_NAME}>/D3D12
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_BINARY_DIR}/AgilitySDK/build/native/bin/x64/D3D12Core.dll"
-        "${CMAKE_BINARY_DIR}/AgilitySDK/build/native/bin/x64/d3d12sdklayers.dll"
-        $<TARGET_FILE_DIR:${TARGET_NAME}>/D3D12/
-        COMMENT "Copying Agility SDK binaries to output directory..."
-)
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${TARGET_NAME}>/D3D12
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_BINARY_DIR}/AgilitySDK/build/native/bin/x64/D3D12Core.dll"
+            "${CMAKE_BINARY_DIR}/AgilitySDK/build/native/bin/x64/d3d12sdklayers.dll"
+            $<TARGET_FILE_DIR:${TARGET_NAME}>/D3D12/
+            COMMENT "Copying Agility SDK binaries to output directory..."
+    )
 endfunction()
 
 # Dependencies

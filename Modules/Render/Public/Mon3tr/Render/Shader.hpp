@@ -19,6 +19,24 @@
  * SOFTWARE.
  */
 #pragma once
-namespace mon3tr::render {
+#include <Mon3tr/Render/RenderMinimal.hpp>
+#include <Mon3tr/Asset/Asset.hpp>
 
+namespace mon3tr::render {
+    class Shader : public asset::Asset {
+        friend class ShaderLoader;
+
+    public:
+        Shader() = default;
+
+        ~Shader() override = default;
+
+        [[nodiscard]] asset::EAssetType GetType() const noexcept override { return kAssetType; }
+
+    public:
+        constexpr static asset::EAssetType kAssetType = asset::EAssetType::Shader;
+
+    private:
+        nvrhi::ShaderHandle handle_{};
+    };
 }
