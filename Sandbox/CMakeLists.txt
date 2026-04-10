@@ -25,3 +25,4 @@ target_compile_options(Mon3trSandbox PRIVATE
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
 )
 CopyDxcBinsToTarget(Mon3trSandbox)
+CopyAgilitySdkBinsToTarget(Mon3trSandbox)

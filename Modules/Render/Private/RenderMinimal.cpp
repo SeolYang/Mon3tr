@@ -21,6 +21,9 @@
 #include <Mon3tr/Render/RenderMinimal.hpp>
 #include <dxgidebug.h>
 
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 619; }
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
+
 M3_DEFINE_MEM_CATEGORY(Render)
 
 namespace mon3tr::internal {
