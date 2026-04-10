@@ -51,38 +51,6 @@ namespace mon3tr::asset {
         LoaderFailure,
     };
 
-    struct AssetImportDesc {
-        fs::path RawFilePath;
-
-        // 한번 Import 되면 에셋에 GUID가 부여되고 에셋을 사람이 쉽게 인식하기 위한 라벨이 붙혀진다.
-        // 기본적으로 라벨은 단순히 사람이 쉽게 보기 위한 목적만을 가지며 해당 에셋을 대표하지는 않는다.
-        fs::path Label;
-    };
-
-    template<typename Importer>
-    struct AssetImportPayload {
-        const AssetImportDesc* ImportDesc = nullptr;
-        const Importer::Desc*  ImporterSpecificDesc = nullptr;
-
-        nlohmann::json* MetadataRoot = nullptr;
-
-        fs::path AssetBinaryPath;
-    };
-
-    struct AssetLoadDesc {
-        Guid AssetGuid;
-    };
-
-    template<typename Loader>
-    struct AssetLoadPayload {
-        const AssetLoadDesc* LoadDesc = nullptr;
-        const Loader::Desc*  LoaderSpecificDesc = nullptr;
-
-        fs::path AssetBinaryPath;
-
-        const nlohmann::json* MetadataRoot = nullptr;
-    };
-
     class AssetManager;
     // cast_to<T> -> dynamic cast for asset! 에셋 타입 당 하나의 에셋 타입!
     // T::kAssetType == Asset* asset->GetType() -> Valid Down Casting!
@@ -91,7 +59,7 @@ namespace mon3tr::asset {
     public:
         AssetHandle() = default;
 
-        AssetHandle(AssetManager& assetManager, const Handle<Asset*> rawHandle);
+        AssetHandle(AssetManager& assetManager, Handle<Asset*> rawHandle);
 
         // 만약 핸들이 유효하다면, 핸들을 복사하고 해당 핸들에 해당하는 에셋의 레퍼런스 카운트를 증가시킨다. (AssetManager::Ref)
         AssetHandle(const AssetHandle& other);
@@ -106,7 +74,7 @@ namespace mon3tr::asset {
         // 핸들이 유효하다면 레퍼런스 카운트를 감소 시킨다. (AssetManager::Unref)
         ~AssetHandle();
 
-        const Asset* Get() const;
+        [[nodiscard]] const Asset* Get() const;
 
         template<typename T>
         const T* Cast() const {

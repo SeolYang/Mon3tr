@@ -29,6 +29,8 @@ namespace mon3tr::asset {
         friend class AssetManager;
 
     public:
+        Asset() = default;
+
         Asset(const Asset&) = delete;
 
         Asset(Asset&&) noexcept = delete;
@@ -41,7 +43,7 @@ namespace mon3tr::asset {
 
         [[nodiscard]] Guid GetGuid() const noexcept { return guid_; }
 
-        virtual EAssetType GetType() const noexcept = 0;
+        [[nodiscard]] virtual EAssetType GetType() const noexcept = 0;
 
     private:
         std::atomic_uint64_t refCounter_{1};
