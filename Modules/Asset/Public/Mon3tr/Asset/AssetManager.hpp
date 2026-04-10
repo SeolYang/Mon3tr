@@ -165,7 +165,7 @@ namespace mon3tr::asset {
                 .AssetBinaryPath = newAssetBinaryPath
             });
             if (importResult != decltype(importResult)::Success) {
-                M3_LOG(AssetManager, Error, "[{}] Failed to import asset {}. => {}", Importer::kName, assetImportDesc.RawFilePath, importResult);
+                M3_LOG(AssetManager, Error, "[{}] Failed to import asset {}. => {}", Importer::kName, assetImportDesc.RawFilePath.string(), magic_enum::enum_name(importResult));
                 fs::remove(newAssetBinaryPath);
                 return EAssetImportResult::ImporterFailure;
             } else if (!fs::exists(newAssetBinaryPath)) {
@@ -232,7 +232,7 @@ namespace mon3tr::asset {
                 M3_LOG(AssetManager, Error, "[{}] Failed to load asset {}({}). Reason: {}",
                        Loader::kName,
                        label, assetLoadDesc.AssetGuid,
-                       expectedAsset.error());
+                       magic_enum::enum_name(expectedAsset.error()));
                 return std::unexpected{EAssetLoadResult::LoaderFailure};
             }
 
