@@ -84,28 +84,28 @@ namespace mon3tr::render {
 
         // Shader Profile
         arguments.emplace_back(L"-T");
-        arguments.emplace_back(ConvertShaderTypeToShaderProfile(payload.ImporterSpecificDesc->ShaderType).data());
+        arguments.emplace_back(ConvertShaderTypeToShaderProfile(payload.ImporterSpecificDesc.ShaderType).data());
 
         // Optimization Level
-        arguments.emplace_back(ConvertOptimizationLevelToFlag(payload.ImporterSpecificDesc->OptimizationLevel).data());
+        arguments.emplace_back(ConvertOptimizationLevelToFlag(payload.ImporterSpecificDesc.OptimizationLevel).data());
 
         // Should pack matrix in row major?
-        if (payload.ImporterSpecificDesc->bPackMatricesInRowMajor) {
+        if (payload.ImporterSpecificDesc.bPackMatricesInRowMajor) {
             arguments.emplace_back(L"-Zpr");
         }
 
         // Should disable validation?
-        if (payload.ImporterSpecificDesc->bDisableValidation) {
+        if (payload.ImporterSpecificDesc.bDisableValidation) {
             arguments.emplace_back(L"-Vd");
         }
 
         // Should treat warning as errors?
-        if (payload.ImporterSpecificDesc->bTreatWarningAsErrors) {
+        if (payload.ImporterSpecificDesc.bTreatWarningAsErrors) {
             arguments.emplace_back(L"-WX");
         }
 
         // Should include debug info?
-        if (payload.ImporterSpecificDesc->bIncludeDebugInfo) {
+        if (payload.ImporterSpecificDesc.bIncludeDebugInfo) {
             arguments.emplace_back(L"-Zi");
             arguments.emplace_back(L"-Qembed_debug");
         } else {
@@ -134,7 +134,7 @@ namespace mon3tr::render {
         uint32                               codePage = CP_UTF8;
         nvrhi::RefCountPtr<IDxcBlobEncoding> sourceBlob;
         if (FAILED(dxcLibrary->CreateBlobFromFile(
-            payload.ImportDesc->RawFilePath.c_str(),
+            payload.ImportDesc.RawFilePath.c_str(),
             &codePage,
             &sourceBlob))) {
             return EResult::FailedToCreateBlobFromRawAssetFile;
@@ -160,7 +160,7 @@ namespace mon3tr::render {
         if (SUCCEEDED(dxcResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errorMessage.GetAddressOf()), nullptr))) {
             if (errorMessage && errorMessage->GetStringLength() > 0) {
                 M3_LOG(ShaderCompiler, Error, "Failed to compile shader from {}. Reasons: {}",
-                       payload.ImportDesc->RawFilePath.string(),
+                       payload.ImportDesc.RawFilePath.string(),
                        errorMessage->GetStringPointer());
 
                 return EResult::FailedToCompileShader;

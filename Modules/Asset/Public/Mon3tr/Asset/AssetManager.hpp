@@ -160,9 +160,9 @@ namespace mon3tr::asset {
             nlohmann::json metadataRoot{};
             using EResult = Importer::EResult;
             const EResult     importResult = Importer::Import(AssetImportPayload<Importer>{
-                .ImportDesc = &assetImportDesc,
-                .ImporterSpecificDesc = &importerDesc,
-                .MetadataRoot = &metadataRoot,
+                .ImportDesc = assetImportDesc,
+                .ImporterSpecificDesc = importerDesc,
+                .MetadataRoot = metadataRoot,
                 .AssetBinaryPath = newAssetBinaryPath
             });
             if (importResult != EResult::Success) {
@@ -223,10 +223,10 @@ namespace mon3tr::asset {
             // @todo async load는 어떻게 처리? Loader의 Load 부분만 따로 async? flecs와 유기적으로 연동가능한지?
             using EResult = Loader::EResult;
             std::expected<Asset*, EResult> expectedAsset = Loader::Load(AssetLoadPayload{
-                .LoadDesc = &assetLoadDesc,
-                .LoaderSpecificDesc = &loaderDesc,
+                .LoadDesc = assetLoadDesc,
+                .LoaderSpecificDesc = loaderDesc,
                 .AssetPath = CreateBinaryPath(assetLoadDesc.AssetGuid),
-                .MetadataRoot = &metadataRoot,
+                .MetadataRoot = metadataRoot,
             });
             if (!expectedAsset.has_value()) {
                 M3_LOG(AssetManager, Error, "[{}] Failed to load asset {}({}). Reason: {}",

@@ -22,6 +22,8 @@
 #include <Mon3tr/Core/CoreMinimal.hpp>
 
 namespace mon3tr::asset {
+    class Asset;
+
     enum EAssetType {
         Text,
         AudioClip,
@@ -35,17 +37,18 @@ namespace mon3tr::asset {
 
         // 한번 Import 되면 에셋에 GUID가 부여되고 에셋을 사람이 쉽게 인식하기 위한 라벨이 붙혀진다.
         // 기본적으로 라벨은 단순히 사람이 쉽게 보기 위한 목적만을 가지며 해당 에셋을 대표하지는 않는다.
+        // (라벨은 중복 가능)
         fs::path Label{};
     };
 
     template<typename Importer>
     struct AssetImportPayload {
-        const AssetImportDesc* ImportDesc = nullptr;
-        const Importer::Desc*  ImporterSpecificDesc = nullptr;
+        const AssetImportDesc& ImportDesc;
+        const Importer::Desc&  ImporterSpecificDesc;
 
-        nlohmann::json* MetadataRoot = nullptr;
+        nlohmann::json& MetadataRoot;
 
-        fs::path AssetBinaryPath{};
+        const fs::path& AssetBinaryPath{};
     };
 
     struct AssetLoadDesc {
@@ -54,11 +57,11 @@ namespace mon3tr::asset {
 
     template<typename Loader>
     struct AssetLoadPayload {
-        const AssetLoadDesc* LoadDesc = nullptr;
-        const Loader::Desc*  LoaderSpecificDesc = nullptr;
+        const AssetLoadDesc& LoadDesc;
+        const Loader::Desc&  LoaderSpecificDesc;
 
-        fs::path AssetBinaryPath{};
+        const fs::path& AssetBinaryPath{};
 
-        const nlohmann::json* MetadataRoot = nullptr;
+        const nlohmann::json& MetadataRoot;
     };
 }

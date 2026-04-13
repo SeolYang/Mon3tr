@@ -34,6 +34,7 @@ namespace mon3tr::asset {
 
         // 임포터 지정 임포트 설명자
         typename T::Desc;
+        std::is_class_v<typename T::Desc>;
 
         // 임포트 결과 열거자
         typename T::EResult;
@@ -56,6 +57,7 @@ namespace mon3tr::asset {
 
         // 로더 지정 임포트 설명자
         typename T::Desc;
+        std::is_class_v<typename T::Desc>;
 
         // 로더 결과 열거자
         typename T::EResult;
