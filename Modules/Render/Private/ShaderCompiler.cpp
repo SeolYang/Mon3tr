@@ -22,6 +22,8 @@
 #include <Mon3tr/Core/FileIO.hpp>
 #include <dxcapi.h>
 
+#include "ShaderConstants.hpp"
+
 M3_DECLARE_LOG_CATEGORY(ShaderCompiler);
 
 M3_DEFINE_LOG_CATEGORY(ShaderCompiler);
@@ -178,6 +180,11 @@ namespace mon3tr::render {
                              })) {
             return EResult::FailedToWriteCompiledShaderBlobToAssetBinaryFile;
         }
+
+        // Metadata 기록
+        nlohmann::json shaderMetadata;
+        shaderMetadata[internal::ShaderConstants::kShaderTypeJsonKey] = magic_enum::enum_name(payload.ImporterSpecificDesc.ShaderType);
+        payload.MetadataRoot[internal::ShaderConstants::kShaderMetadataJsonKey] = shaderMetadata;
 
         return EResult::Success;
     }

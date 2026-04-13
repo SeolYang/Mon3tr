@@ -21,48 +21,10 @@
 #pragma once
 #include <Mon3tr/Core/CoreMinimal.hpp>
 
-namespace mon3tr::asset {
-    class Asset;
-
-    enum EAssetType {
-        Text,
-        AudioClip,
-        StaticMesh,
-        SkeletalMesh,
-        Shader
-    };
-
-    struct AssetImportDesc {
-        fs::path RawFilePath{};
-
-        // 한번 Import 되면 에셋에 GUID가 부여되고 에셋을 사람이 쉽게 인식하기 위한 라벨이 붙혀진다.
-        // 기본적으로 라벨은 단순히 사람이 쉽게 보기 위한 목적만을 가지며 해당 에셋을 대표하지는 않는다.
-        // (라벨은 중복 가능)
-        fs::path Label{};
-    };
-
-    template<typename Importer>
-    struct AssetImportPayload {
-        const AssetImportDesc& ImportDesc;
-        const Importer::Desc&  ImporterSpecificDesc;
-
-        nlohmann::json& MetadataRoot;
-
-        const fs::path& AssetBinaryPath;
-    };
-
-    struct AssetLoadDesc {
-        Guid AssetGuid{};
-    };
-
-    template<typename Loader>
-    struct AssetLoadPayload {
-        const AssetLoadDesc& LoadDesc;
-        const Loader::Desc&  LoaderSpecificDesc;
-
-        const fs::path& AssetBinaryPath;
-        const fs::path& Label;
-
-        const nlohmann::json& MetadataRoot;
+namespace mon3tr::internal {
+    struct ShaderConstants {
+    public:
+        static constexpr std::string_view kShaderMetadataJsonKey = "Shader";
+        static constexpr std::string_view kShaderTypeJsonKey = "Type";
     };
 }

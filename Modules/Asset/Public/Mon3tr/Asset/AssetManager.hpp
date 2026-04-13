@@ -49,6 +49,7 @@ namespace mon3tr::asset {
         EmptyAssetMetadata,
         AssetMetadataValidationFailed,
         LoaderFailure,
+        FailedToCreateHandle
     };
 
     class AssetManager;
@@ -159,14 +160,15 @@ namespace mon3tr::asset {
             const fs::path newAssetBinaryPath = CreateBinaryPath(newGuid);
             nlohmann::json metadataRoot{};
             using EResult = Importer::EResult;
-            const EResult     importResult = Importer::Import(AssetImportPayload<Importer>{
+            const EResult importResult = Importer::Import(AssetImportPayload<Importer>{
                 .ImportDesc = assetImportDesc,
                 .ImporterSpecificDesc = importerDesc,
                 .MetadataRoot = metadataRoot,
                 .AssetBinaryPath = newAssetBinaryPath
             });
             if (importResult != EResult::Success) {
-                M3_LOG(AssetManager, Error, "[{}] Failed to import asset {}. => {}", Importer::kName, assetImportDesc.RawFilePath.string(), magic_enum::enum_name(importResult));
+                M3_LOG(AssetManager, Error, "[{}] Failed to import asset {}. => {}", Importer::kName, assetImportDesc.RawFilePath.string(),
+                       magic_enum::enum_name(importResult));
                 fs::remove(newAssetBinaryPath);
                 return EAssetImportResult::ImporterFailure;
             } else if (!fs::exists(newAssetBinaryPath)) {
@@ -216,22 +218,23 @@ namespace mon3tr::asset {
             if (version != Loader::kVersion) {
                 M3_LOG(AssetManager, Warning, "[{}] Loader Versions mismatch with asset {}({}) metadata version. Expected: {}, Found: {}",
                        Loader::kName,
-                       label, assetLoadDesc.AssetGuid,
+                       label.string(), assetLoadDesc.AssetGuid.str(),
                        Loader::kVersion, version);
             }
 
             // @todo async load는 어떻게 처리? Loader의 Load 부분만 따로 async? flecs와 유기적으로 연동가능한지?
             using EResult = Loader::EResult;
-            std::expected<Asset*, EResult> expectedAsset = Loader::Load(AssetLoadPayload{
+            std::expected<Asset*, EResult> expectedAsset = Loader::Load(AssetLoadPayload<Loader>{
                 .LoadDesc = assetLoadDesc,
                 .LoaderSpecificDesc = loaderDesc,
-                .AssetPath = CreateBinaryPath(assetLoadDesc.AssetGuid),
+                .AssetBinaryPath = CreateBinaryPath(assetLoadDesc.AssetGuid),
+                .Label = label,
                 .MetadataRoot = metadataRoot,
             });
             if (!expectedAsset.has_value()) {
                 M3_LOG(AssetManager, Error, "[{}] Failed to load asset {}({}). Reason: {}",
                        Loader::kName,
-                       label, assetLoadDesc.AssetGuid,
+                       label.string(), assetLoadDesc.AssetGuid.str(),
                        magic_enum::enum_name(expectedAsset.error()));
                 return std::unexpected{EAssetLoadResult::LoaderFailure};
             }
@@ -245,6 +248,14 @@ namespace mon3tr::asset {
             const Handle<Asset*> newRawHandle = handleManager_.Create(asset);
             handleManagerMutex_.unlock();
             //! Handle Manager unlock
+            if (newRawHandle.IsNull()) {
+                M3_LOG(AssetManager, Error, "[{}] Failed to create handle for asset {}({}).",
+                       Loader::kName,
+                       label.string(), assetLoadDesc.AssetGuid.str());
+
+                Destroy<Asset, M3_MEM_CATEGORY(Asset)>(asset);
+                return std::unexpected{EAssetLoadResult::FailedToCreateHandle};
+            }
 
             //! Asset Table lock
             assetTableMutex_.lock();

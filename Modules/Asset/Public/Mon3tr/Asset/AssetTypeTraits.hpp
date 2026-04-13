@@ -46,6 +46,7 @@ namespace mon3tr::asset {
     };
 
 
+    // @warning Asset Loader에 의해 할당되는 모든 에셋들은 Asset Memory Category에 대해 할당된다고 가정합니다.
     template<typename T>
     concept AssetLoaderTrait = requires(const AssetLoadPayload<T>& payload)
     {

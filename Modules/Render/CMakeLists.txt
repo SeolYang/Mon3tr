@@ -19,8 +19,10 @@ set(Mon3trRenderPrivate
         Private/FrameManager_DX12.hpp
         Private/FrameManager_DX12.cpp
         Private/RenderGraph.cpp
+        Private/ShaderConstants.hpp
         Private/Shader.cpp
-        Private/ShaderCompiler.cpp)
+        Private/ShaderCompiler.cpp
+        Private/ShaderLoader.cpp)
 set(Mon3trRenderPublic
         Public/Mon3tr/Render/RenderMinimal.hpp
         Public/Mon3tr/Render/DeviceBuilder.hpp
@@ -29,7 +31,8 @@ set(Mon3trRenderPublic
         Public/Mon3tr/Render/Renderer.hpp
         Public/Mon3tr/Render/RenderGraph.hpp
         Public/Mon3tr/Render/Shader.hpp
-        Public/Mon3tr/Render/ShaderCompiler.hpp)
+        Public/Mon3tr/Render/ShaderCompiler.hpp
+        Public/Mon3tr/Render/ShaderLoader.hpp)
 
 target_sources(Mon3trRender PRIVATE
         ${Mon3trRenderPrivate})
