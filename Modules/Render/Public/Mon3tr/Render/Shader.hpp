@@ -33,6 +33,8 @@ namespace mon3tr::render {
 
         [[nodiscard]] asset::EAssetType GetType() const noexcept override { return kAssetType; }
 
+        nvrhi::ShaderHandle GetHandle() const noexcept { return handle_; }
+
     public:
         constexpr static asset::EAssetType kAssetType = asset::EAssetType::Shader;
 
