@@ -74,7 +74,7 @@ namespace mon3tr::render {
         }
     }
 
-    EShaderCompileResult ShaderCompiler::Import(const asset::AssetImportPayload<ShaderCompiler>& payload) {
+    ShaderCompiler::EResult ShaderCompiler::Import(const asset::AssetImportPayload<ShaderCompiler>& payload) {
         Vector<const wchar_t*> arguments;
         arguments.reserve(16);
 
@@ -118,17 +118,17 @@ namespace mon3tr::render {
 
         nvrhi::RefCountPtr<IDxcUtils> dxcUtils;
         if (FAILED(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils)))) {
-            return EShaderCompileResult::FailedToCreateDxcUtilsInstance;
+            return EResult::FailedToCreateDxcUtilsInstance;
         }
 
         nvrhi::RefCountPtr<IDxcIncludeHandler> dxcIncludeHandler;
         if (FAILED(dxcUtils->CreateDefaultIncludeHandler(&dxcIncludeHandler))) {
-            return EShaderCompileResult::FailedToCreateDxcIncludeHandler;
+            return EResult::FailedToCreateDxcIncludeHandler;
         }
 
         nvrhi::RefCountPtr<IDxcLibrary> dxcLibrary;
         if (FAILED(DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&dxcLibrary)))) {
-            return EShaderCompileResult::FailedToCreateDxcLibraryInstance;
+            return EResult::FailedToCreateDxcLibraryInstance;
         }
 
         uint32                               codePage = CP_UTF8;
@@ -137,12 +137,12 @@ namespace mon3tr::render {
             payload.ImportDesc->RawFilePath.c_str(),
             &codePage,
             &sourceBlob))) {
-            return EShaderCompileResult::FailedToCreateBlobFromRawAssetFile;
+            return EResult::FailedToCreateBlobFromRawAssetFile;
         }
 
         nvrhi::RefCountPtr<IDxcCompiler3> dxcCompiler;
         if (FAILED(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler)))) {
-            return EShaderCompileResult::FailedToCreateDxcCompilerInstance;
+            return EResult::FailedToCreateDxcCompilerInstance;
         }
 
         const DxcBuffer dxcBuffer{
@@ -163,22 +163,22 @@ namespace mon3tr::render {
                        payload.ImportDesc->RawFilePath.string(),
                        errorMessage->GetStringPointer());
 
-                return EShaderCompileResult::FailedToCompileShader;
+                return EResult::FailedToCompileShader;
             }
         }
 
         nvrhi::RefCountPtr<IDxcBlob> compiledShaderBlob;
         if (FAILED(dxcResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&compiledShaderBlob), nullptr))) {
-            return EShaderCompileResult::FailedToGetCompiledShaderBlob;
+            return EResult::FailedToGetCompiledShaderBlob;
         }
 
         if (!WriteBlobToFile(payload.AssetBinaryPath, std::span{
                                  static_cast<const uint8*>(compiledShaderBlob->GetBufferPointer()),
                                  compiledShaderBlob->GetBufferSize()
                              })) {
-            return EShaderCompileResult::FailedToWriteCompiledShaderBlobToAssetBinaryFile;
+            return EResult::FailedToWriteCompiledShaderBlobToAssetBinaryFile;
         }
 
-        return EShaderCompileResult::Success;
+        return EResult::Success;
     }
 }

@@ -144,7 +144,7 @@ namespace mon3tr::asset {
         // 에셋 기본 규격
         // GENERATED_GUID.m3tr: Binary
         // GENERATED_GUID.m3mt: Metadata
-        template<typename Importer>
+        template<AssetImporterTrait Importer>
         EAssetImportResult Import(const AssetImportDesc& assetImportDesc, const Importer::Desc& importerDesc) {
             if (assetImportDesc.RawFilePath.empty()) {
                 return EAssetImportResult::EmptyRawFilePath;
@@ -158,13 +158,14 @@ namespace mon3tr::asset {
 
             const fs::path newAssetBinaryPath = CreateBinaryPath(newGuid);
             nlohmann::json metadataRoot{};
-            const auto     importResult = Importer::Import(AssetImportPayload<Importer>{
+            using EResult = Importer::EResult;
+            const EResult     importResult = Importer::Import(AssetImportPayload<Importer>{
                 .ImportDesc = &assetImportDesc,
                 .ImporterSpecificDesc = &importerDesc,
                 .MetadataRoot = &metadataRoot,
                 .AssetBinaryPath = newAssetBinaryPath
             });
-            if (importResult != decltype(importResult)::Success) {
+            if (importResult != EResult::Success) {
                 M3_LOG(AssetManager, Error, "[{}] Failed to import asset {}. => {}", Importer::kName, assetImportDesc.RawFilePath.string(), magic_enum::enum_name(importResult));
                 fs::remove(newAssetBinaryPath);
                 return EAssetImportResult::ImporterFailure;
@@ -186,7 +187,7 @@ namespace mon3tr::asset {
             return EAssetImportResult::Success;
         }
 
-        template<typename Loader>
+        template<AssetLoaderTrait Loader>
         std::expected<AssetHandle, EAssetLoadResult> Load(const AssetLoadDesc& assetLoadDesc, const Loader::Desc& loaderDesc) {
             //! Asset Table shared lock
             {
@@ -220,9 +221,8 @@ namespace mon3tr::asset {
             }
 
             // @todo async load는 어떻게 처리? Loader의 Load 부분만 따로 async? flecs와 유기적으로 연동가능한지?
-            using ELoadResult = Loader::ELoadResult;
-            static_assert(std::is_enum_v<ELoadResult>);
-            std::expected<Asset*, ELoadResult> expectedAsset = Loader::Load(AssetLoadPayload{
+            using EResult = Loader::EResult;
+            std::expected<Asset*, EResult> expectedAsset = Loader::Load(AssetLoadPayload{
                 .LoadDesc = &assetLoadDesc,
                 .LoaderSpecificDesc = &loaderDesc,
                 .AssetPath = CreateBinaryPath(assetLoadDesc.AssetGuid),

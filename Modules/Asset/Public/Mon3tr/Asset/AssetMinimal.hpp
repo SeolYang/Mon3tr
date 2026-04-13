@@ -20,48 +20,9 @@
  */
 #pragma once
 #include <Mon3tr/Core/Memory.hpp>
-#include <Mon3tr/Core/CoreMinimal.hpp>
+
+#include <Mon3tr/Asset/AssetCoreTypes.hpp>
+#include <Mon3tr/Asset/AssetTypeTraits.hpp>
 
 M3_DECLARE_MEM_CATEGORY(Asset);
 
-namespace mon3tr::asset {
-    enum EAssetType {
-        Text,
-        AudioClip,
-        StaticMesh,
-        SkeletalMesh,
-        Shader
-    };
-
-    struct AssetImportDesc {
-        fs::path RawFilePath{};
-
-        // 한번 Import 되면 에셋에 GUID가 부여되고 에셋을 사람이 쉽게 인식하기 위한 라벨이 붙혀진다.
-        // 기본적으로 라벨은 단순히 사람이 쉽게 보기 위한 목적만을 가지며 해당 에셋을 대표하지는 않는다.
-        fs::path Label{};
-    };
-
-    template<typename Importer>
-    struct AssetImportPayload {
-        const AssetImportDesc* ImportDesc = nullptr;
-        const Importer::Desc*  ImporterSpecificDesc = nullptr;
-
-        nlohmann::json* MetadataRoot = nullptr;
-
-        fs::path AssetBinaryPath{};
-    };
-
-    struct AssetLoadDesc {
-        Guid AssetGuid{};
-    };
-
-    template<typename Loader>
-    struct AssetLoadPayload {
-        const AssetLoadDesc* LoadDesc = nullptr;
-        const Loader::Desc*  LoaderSpecificDesc = nullptr;
-
-        fs::path AssetBinaryPath{};
-
-        const nlohmann::json* MetadataRoot = nullptr;
-    };
-}

@@ -28,18 +28,6 @@ namespace mon3tr::asset {
 }
 
 namespace mon3tr::render {
-    enum class EShaderCompileResult : uint16 {
-        Success,
-        FailedToCreateDxcUtilsInstance,
-        FailedToCreateDxcIncludeHandler,
-        FailedToCreateDxcLibraryInstance,
-        FailedToCreateBlobFromRawAssetFile,
-        FailedToCreateDxcCompilerInstance,
-        FailedToCompileShader,
-        FailedToGetCompiledShaderBlob,
-        FailedToWriteCompiledShaderBlobToAssetBinaryFile,
-    };
-
     enum class EShaderOptimizationLevel : uint16 {
         None,
         O0,
@@ -49,9 +37,19 @@ namespace mon3tr::render {
     };
 
     class ShaderCompiler {
-        friend class asset::AssetManager;
-
     public:
+        enum class EResult : uint64 {
+            Success,
+            FailedToCreateDxcUtilsInstance,
+            FailedToCreateDxcIncludeHandler,
+            FailedToCreateDxcLibraryInstance,
+            FailedToCreateBlobFromRawAssetFile,
+            FailedToCreateDxcCompilerInstance,
+            FailedToCompileShader,
+            FailedToGetCompiledShaderBlob,
+            FailedToWriteCompiledShaderBlobToAssetBinaryFile,
+        };
+
         struct Desc {
             // None/AllGraphics/AllRayTracing/All/bitwise combined Types are invalid argument!
             nvrhi::ShaderType ShaderType = nvrhi::ShaderType::None;
@@ -63,11 +61,11 @@ namespace mon3tr::render {
             bool                     bIncludeDebugInfo = false;                        // -Zi
         };
 
-    private:
-        [[nodiscard]] static EShaderCompileResult Import(const asset::AssetImportPayload<ShaderCompiler>& payload);
+    public:
+        [[nodiscard]] static EResult Import(const asset::AssetImportPayload<ShaderCompiler>& payload);
 
     public:
-        static constexpr uint64 kVersion = 1;
+        static constexpr uint64           kVersion = 1;
         static constexpr std::string_view kName = "ShaderCompiler";
     };
 }
