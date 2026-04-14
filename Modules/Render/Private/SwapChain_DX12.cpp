@@ -103,6 +103,7 @@ namespace mon3tr::render {
         M3_PRE_COND(!renderTargets_.empty());
         M3_PRE_COND(!nativeRenderTargets_.empty());
 
+        framebuffers_.clear();
         renderTargets_.clear();
         nativeRenderTargets_.clear();
 
@@ -129,14 +130,13 @@ namespace mon3tr::render {
         M3_PRE_COND(dxgiSwapChain_ != nullptr);
         M3_PRE_COND(!renderTargets_.empty());
 
-        currentBackBufferIdx_ = dxgiSwapChain_->GetCurrentBackBufferIndex();
-
         uint32 presentFlags = 0;
         if (!desc_.bVsyncEnabled && bSupportedTearing_) {
             presentFlags |= DXGI_PRESENT_ALLOW_TEARING;
         }
 
         const HRESULT hr = dxgiSwapChain_->Present(desc_.bVsyncEnabled ? 1 : 0, presentFlags);
+        currentBackBufferIdx_ = dxgiSwapChain_->GetCurrentBackBufferIndex();
         return SUCCEEDED(hr);
     }
 
@@ -179,6 +179,13 @@ namespace mon3tr::render {
                 return false;
             }
             renderTargets_.emplace_back(backBuffer);
+
+            // @todo Add Depth? 아니면 그냥 단순 color attachment만 남기고, 항상 마지막에 quad draw? -> 사실 post process 단계를 생각하면 크게 이상하진 않은 것 같음
+            const nvrhi::FramebufferHandle framebuffer = renderDevice_->createFramebuffer(nvrhi::FramebufferDesc{}.addColorAttachment(backBuffer));
+            if (framebuffer == nullptr) {
+                return false;
+            }
+            framebuffers_.emplace_back(framebuffer);
         }
 
         return true;

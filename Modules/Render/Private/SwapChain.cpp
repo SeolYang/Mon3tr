@@ -38,6 +38,7 @@ namespace mon3tr::render {
     void SwapChain::Shutdown() {
         window_ = nullptr;
         desc_ = {};
+        framebuffers_.clear();
         renderTargets_.clear();
 
         System::Shutdown();

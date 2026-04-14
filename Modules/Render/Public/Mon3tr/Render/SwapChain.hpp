@@ -94,17 +94,22 @@ namespace mon3tr::render {
         [[nodiscard]] uint32 GetBackBufferCount() const noexcept { return desc_.BufferCount; }
         [[nodiscard]] uint32 GetCurrentBackBufferIndex() const noexcept { return currentBackBufferIdx_; }
 
+        [[nodiscard]] nvrhi::ITexture*     GetCurrentBackBufferTexture() const { return renderTargets_[currentBackBufferIdx_]; }
+        [[nodiscard]] nvrhi::IFramebuffer* GetCurrentBackBufferFramebuffer() const { return framebuffers_[currentBackBufferIdx_]; }
+
     protected:
         SwapChain() = default;
 
         virtual ESwapChainInitializeResult Initialize_Impl() = 0;
+
         virtual ESwapChainResizeResult Resize_Impl() = 0;
 
     protected:
-        nvrhi::DeviceHandle                                   renderDevice_ = nullptr;
-        Window*                                               window_ = nullptr;
-        SwapChainDesc                                         desc_;
-        Vector<nvrhi::TextureHandle, M3_MEM_CATEGORY(Render)> renderTargets_;
-        uint32                                                currentBackBufferIdx_ = 0;
+        nvrhi::DeviceHandle                                       renderDevice_ = nullptr;
+        Window*                                                   window_ = nullptr;
+        SwapChainDesc                                             desc_;
+        Vector<nvrhi::TextureHandle, M3_MEM_CATEGORY(Render)>     renderTargets_;
+        Vector<nvrhi::FramebufferHandle, M3_MEM_CATEGORY(Render)> framebuffers_;
+        uint32                                                    currentBackBufferIdx_ = 0;
     };
 }
