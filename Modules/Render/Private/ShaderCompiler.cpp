@@ -32,28 +32,28 @@ namespace mon3tr::render {
     static std::wstring_view ConvertShaderTypeToShaderProfile(const nvrhi::ShaderType shaderType) {
         switch (shaderType) {
             case nvrhi::ShaderType::Compute:
-                return L"cs_6_9";
+                return L"cs_6_8";
             case nvrhi::ShaderType::Vertex:
-                return L"vs_6_9";
+                return L"vs_6_8";
             case nvrhi::ShaderType::Hull:
-                return L"hs_6_9";
+                return L"hs_6_8";
             case nvrhi::ShaderType::Domain:
-                return L"ds_6_9";
+                return L"ds_6_8";
             case nvrhi::ShaderType::Geometry:
-                return L"gs_6_9";
+                return L"gs_6_8";
             case nvrhi::ShaderType::Pixel:
-                return L"ps_6_9";
+                return L"ps_6_8";
             case nvrhi::ShaderType::Amplification:
-                return L"as_6_9";
+                return L"as_6_8";
             case nvrhi::ShaderType::Mesh:
-                return L"ms_6_9";
+                return L"ms_6_8";
             case nvrhi::ShaderType::RayGeneration:
             case nvrhi::ShaderType::AnyHit:
             case nvrhi::ShaderType::ClosestHit:
             case nvrhi::ShaderType::Miss:
             case nvrhi::ShaderType::Intersection:
             case nvrhi::ShaderType::Callable:
-                return L"lib_6_9";
+                return L"lib_6_8";
             default:
                 M3_ASSERT(false);
                 return std::wstring_view{};
@@ -116,7 +116,8 @@ namespace mon3tr::render {
 
         // @todo include path도 Descriptor로 지정가능하도록?
         // Shader include path
-        arguments.emplace_back(L"-I /Shaders");
+        arguments.emplace_back(L"-I");
+        arguments.emplace_back(L"/Shaders");
 
         nvrhi::RefCountPtr<IDxcUtils> dxcUtils;
         if (FAILED(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils)))) {
