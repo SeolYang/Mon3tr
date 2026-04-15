@@ -32,7 +32,9 @@ set(Mon3trRenderPublic
         Public/Mon3tr/Render/RenderGraph.hpp
         Public/Mon3tr/Render/Shader.hpp
         Public/Mon3tr/Render/ShaderCompiler.hpp
-        Public/Mon3tr/Render/ShaderLoader.hpp)
+        Public/Mon3tr/Render/ShaderLoader.hpp
+        Public/Mon3tr/Render/Quantization.hpp
+        Public/Mon3tr/Render/Vertex.hpp)
 
 target_sources(Mon3trRender PRIVATE
         ${Mon3trRenderPrivate})
