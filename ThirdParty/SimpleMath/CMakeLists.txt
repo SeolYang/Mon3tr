@@ -10,11 +10,11 @@ target_include_directories(
 
 set(SimpleMathPrivate
         Private/SimpleMath.cpp
-        Private/SimpleMath.inl
 )
 
 set(SimpleMathPublic
-        Public/SimpleMath/SimpleMath.h)
+        Public/SimpleMath/SimpleMath.h
+        Public/SimpleMath/SimpleMath.inl)
 
 target_sources(SimpleMath PRIVATE
         ${SimpleMathPrivate})
