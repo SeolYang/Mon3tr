@@ -275,6 +275,8 @@ namespace mon3tr::asset {
             return garbageLifetime_;
         }
 
+        void Shutdown() override;
+
     private:
         // 에셋이 해당 핸들에 대해 유효하더라도, 에셋의 ref count가 0이면 null을 반환해야 한다.
         const Asset* Lookup(Handle<Asset*> handle, bool bShouldIgnoreZeroRefCount = true) const;

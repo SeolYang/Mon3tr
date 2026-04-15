@@ -133,6 +133,21 @@ namespace mon3tr::asset {
         ++garbageCollectCounter_;
     }
 
+    void AssetManager::Shutdown() {
+        for (const auto& [guid, asset] : assetTable_) {
+            Destroy<Asset, M3_MEM_CATEGORY(Asset)>(*handleManager_.GetMutable(asset));
+            handleManager_.Destroy(asset);
+        }
+        assetTable_.clear();
+
+        for (GarbageBuffer& garbageBuffer : garbageBuffers_) {
+            garbageBuffer.Buffer.get_container().clear();
+        }
+        finalPhasedGarbageBuffer_.clear();
+
+        System::Shutdown();
+    }
+
     const Asset* AssetManager::Lookup(const Handle<Asset*> handle, bool bShouldIgnoreZeroRefCount) const {
         if (handle.IsNull()) {
             return nullptr;
