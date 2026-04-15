@@ -71,6 +71,8 @@ target_link_libraries(Mon3trRender PUBLIC
 
         PRIVATE
         DXC::dxcompiler
+        meshoptimizer
+        assimp
 )
 
 target_compile_options(Mon3trRender PRIVATE

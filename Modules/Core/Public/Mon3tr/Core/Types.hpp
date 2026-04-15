@@ -21,6 +21,7 @@
 #pragma once
 #include <cstdint>
 #include <crossguid/guid.hpp>
+#include <SimpleMath/SimpleMath.h>
 
 namespace mon3tr {
     using uint8 = uint8_t;
@@ -35,4 +36,6 @@ namespace mon3tr {
     using f64 = double;
 
     using Guid = xg::Guid;
+
+    namespace math = DirectX::SimpleMath;
 }
