@@ -16,7 +16,8 @@ set(Mon3trCorePrivate
         Private/Window.cpp
         Private/GlobalTimer.cpp
         Private/Memory.cpp
-        Private/FileIO.cpp)
+        Private/FileIO.cpp
+        Private/Engine.cpp)
 set(Mon3trCorePublic
         Public/Mon3tr/Core/Assertion.hpp
         Public/Mon3tr/Core/CoreMinimal.hpp
@@ -34,7 +35,8 @@ set(Mon3trCorePublic
         Public/Mon3tr/Core/Profiler.hpp
         Public/Mon3tr/Core/GlobalTimer.hpp
         Public/Mon3tr/Core/Allocator.hpp
-        Public/Mon3tr/Core/FileIO.hpp)
+        Public/Mon3tr/Core/FileIO.hpp
+        Public/Mon3tr/Core/Engine.hpp)
 
 target_sources(Mon3trCore PRIVATE
         ${Mon3trCorePrivate})
@@ -59,6 +61,7 @@ target_link_libraries(Mon3trCore PUBLIC
         crossguid
         simdjson::simdjson
         nlohmann_json
+        enkiTS
 )
 
 target_compile_options(Mon3trCore PRIVATE

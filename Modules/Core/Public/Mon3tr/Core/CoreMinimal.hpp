@@ -73,4 +73,5 @@ M3_DECLARE_MEM_CATEGORY(Core)
 #include <SDL3/SDL.h>
 #include <simdjson/simdjson.h>
 #include <nlohmann/json.hpp>
+#include <TaskScheduler.h>
 #pragma warning(pop)
