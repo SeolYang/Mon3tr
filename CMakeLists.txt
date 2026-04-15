@@ -181,7 +181,13 @@ FetchContent_Declare(
         GIT_TAG v6.0.4
 )
 
-FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp nvrhi EASTL snmalloc CrossGuid simdjson nlohmann_json meshoptimizer assimp)
+FetchContent_Declare(
+        enkiTS
+        GIT_REPOSITORY https://github.com/dougbinks/enkiTS.git
+        GIT_TAG v1.11
+)
+
+FetchContent_MakeAvailable(simdutf cereal spdlog magic_enum imgui flecs tracy JoltPhysics SDL unordered_dense directxmath vfspp nvrhi EASTL snmalloc CrossGuid simdjson nlohmann_json meshoptimizer assimp enkiTS)
 
 FetchContent_Declare(
         dxc_binaries
