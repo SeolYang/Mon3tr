@@ -80,6 +80,17 @@ namespace mon3tr {
             }
             return ptr;
         }
+
+        // snmalloc::libc wrapper
+        namespace libc {
+            void* Malloc(const uint64 size);
+
+            void Free(void* ptr);
+
+            void* Realloc(void* ptr, const uint64 size);
+
+            void* Calloc(const uint64 size);
+        }
     }
 
     template<MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>

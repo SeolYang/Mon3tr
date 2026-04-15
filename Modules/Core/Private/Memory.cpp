@@ -115,4 +115,20 @@ namespace mon3tr::internal {
     uint64 GetAllocationSize(const void* const ptr) {
         return snmalloc::alloc_size(ptr);
     }
+
+    void* libc::Malloc(const uint64 size) {
+        return snmalloc::libc::malloc(size);
+    }
+
+    void libc::Free(void* ptr) {
+        return snmalloc::libc::free(ptr);
+    }
+
+    void* libc::Realloc(void* ptr, const uint64 size) {
+        return snmalloc::libc::realloc(ptr, size);
+    }
+
+    void* libc::Calloc(const uint64 size) {
+        return snmalloc::libc::calloc(1, size);
+    }
 }
