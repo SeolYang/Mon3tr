@@ -38,6 +38,8 @@ namespace mon3tr {
         ecs_os_set_api_defaults();
         ecs_os_api_t api = ecs_os_api;
 
+        // 엔진에서 외부에 노출하는 Create/Destroy 함수의 경우 realloc과 같은 동작을 지원하지 않기 때문에
+        // 해당 API들을 직접적으로 사용하는 대신 snmalloc에서 제공하는 libc API를 사용하도록 한다.
         api.malloc_ = [](const ecs_size_t size) { return internal::libc::Malloc(size); };
         api.free_ = [](void* ptr) { internal::libc::Free(ptr); };
         api.realloc_ = [](void* ptr, const ecs_size_t size) { return internal::libc::Realloc(ptr, size); };

@@ -17,7 +17,8 @@ set(Mon3trCorePrivate
         Private/GlobalTimer.cpp
         Private/Memory.cpp
         Private/FileIO.cpp
-        Private/Engine.cpp)
+        Private/Engine.cpp
+        Private/TwoLevelSegregatedFit.cpp)
 set(Mon3trCorePublic
         Public/Mon3tr/Core/Assertion.hpp
         Public/Mon3tr/Core/CoreMinimal.hpp
@@ -36,7 +37,8 @@ set(Mon3trCorePublic
         Public/Mon3tr/Core/GlobalTimer.hpp
         Public/Mon3tr/Core/Allocator.hpp
         Public/Mon3tr/Core/FileIO.hpp
-        Public/Mon3tr/Core/Engine.hpp)
+        Public/Mon3tr/Core/Engine.hpp
+        Public/Mon3tr/Core/TwoLevelSegregatedFit.hpp)
 
 target_sources(Mon3trCore PRIVATE
         ${Mon3trCorePrivate})
