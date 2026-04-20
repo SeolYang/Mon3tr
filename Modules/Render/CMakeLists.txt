@@ -22,7 +22,8 @@ set(Mon3trRenderPrivate
         Private/ShaderConstants.hpp
         Private/Shader.cpp
         Private/ShaderCompiler.cpp
-        Private/ShaderLoader.cpp)
+        Private/ShaderLoader.cpp
+        Private/GpuStorage.cpp)
 set(Mon3trRenderPublic
         Public/Mon3tr/Render/RenderMinimal.hpp
         Public/Mon3tr/Render/DeviceBuilder.hpp
@@ -34,7 +35,8 @@ set(Mon3trRenderPublic
         Public/Mon3tr/Render/ShaderCompiler.hpp
         Public/Mon3tr/Render/ShaderLoader.hpp
         Public/Mon3tr/Render/Quantization.hpp
-        Public/Mon3tr/Render/Vertex.hpp)
+        Public/Mon3tr/Render/Vertex.hpp
+        Public/Mon3tr/Render/GpuStorage.hpp)
 
 target_sources(Mon3trRender PRIVATE
         ${Mon3trRenderPrivate})
