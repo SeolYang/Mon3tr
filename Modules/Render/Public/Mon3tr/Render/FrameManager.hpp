@@ -41,15 +41,15 @@ namespace mon3tr::render {
     public:
         ~FrameManager() override = default;
 
-        virtual void BeginFrame() = 0;
+        [[nodiscard]] EFrameManagerInitializeResult Initialize(const FrameManagerDependency& dependency, const FrameManagerDesc& desc);
 
-        virtual void EndFrame() { ++renderFrameIdx_; }
+        void Shutdown() override;
 
         [[nodiscard]] static Ptr<FrameManager, M3_MEM_CATEGORY(Render)> Create(EGraphicsAPI graphicsAPI);
 
-        [[nodiscard]] EFrameManagerInitializeResult Initialize(const FrameManagerDependency& dependency, const FrameManagerDesc& desc);
+        virtual void BeginFrame() = 0;
 
-        virtual void Shutdown() override;
+        virtual void EndFrame() { ++renderFrameIdx_; }
 
         virtual void SignalAllWaitEvents() = 0;
 

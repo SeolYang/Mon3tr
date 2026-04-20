@@ -67,7 +67,8 @@ namespace mon3tr::render {
 
         std::optional<Range> QueryRange(const Handle<Alloc> handle) const;
 
-        void BeginFrame();
+        // Execute on the main thread at the beginning of every single frame.
+        void FlushDeletionQueue();
 
         nvrhi::IBuffer* GetBuffer() { return buffer_.Get(); }
 

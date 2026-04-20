@@ -83,7 +83,7 @@ namespace mon3tr::render {
         return Range{.Offset = (*blockPtr)->Offset, .Size = (*blockPtr)->Size};
     }
 
-    void GpuStorage::BeginFrame() {
+    void GpuStorage::FlushDeletionQueue() {
         Queue<Handle<Alloc> >& deferredDeletionQueue = deferredDeletionQueues_[swapChain_->GetCurrentBackBufferIndex()];
         while (!deferredDeletionQueue.empty()) {
             Delete(deferredDeletionQueue.front());
