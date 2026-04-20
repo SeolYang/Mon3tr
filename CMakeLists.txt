@@ -181,6 +181,7 @@ FetchContent_Declare(
         GIT_TAG v6.0.4
 )
 
+set(ENKITS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
         enkiTS
         GIT_REPOSITORY https://github.com/dougbinks/enkiTS.git
