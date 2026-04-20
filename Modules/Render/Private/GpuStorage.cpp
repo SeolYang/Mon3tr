@@ -39,6 +39,15 @@ namespace mon3tr::render {
         deferredDeletionQueues_.resize(swapChain_->GetBackBufferCount());
     }
 
+    GpuStorage::~GpuStorage() {
+        for (Queue<Handle<Alloc> >& deferredDeletionQueue: deferredDeletionQueues_) {
+            while (!deferredDeletionQueue.empty()) {
+                Delete(deferredDeletionQueue.front());
+                deferredDeletionQueue.pop();
+            }
+        }
+    }
+
     Handle<GpuStorage::Alloc> GpuStorage::Allocate(const uint64 size) {
         M3_ASSERT(size > 0);
         M3_ASSERT(buffer_ != nullptr);
@@ -95,11 +104,12 @@ namespace mon3tr::render {
         });
 
         cmdList->open();
+        cmdList->setEnableAutomaticBarriers(false);
         cmdList->copyBuffer(buffer_.Get(), 0, oldBuffer.Get(), 0, oldSize);
         cmdList->close();
 
         const nvrhi::EventQueryHandle eventQuery = renderDevice_->createEventQuery();
-        renderDevice_->executeCommandList(cmdList);
+        renderDevice_->executeCommandList(cmdList, nvrhi::CommandQueue::Copy);
         renderDevice_->setEventQuery(eventQuery.Get(), nvrhi::CommandQueue::Copy);
         // 동기 방식, pollEventQuery로 비동기로 확인 가능! 추후 비동기 에셋 로딩/스트리밍에 활용할것!
         renderDevice_->waitEventQuery(eventQuery.Get());

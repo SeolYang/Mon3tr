@@ -51,7 +51,7 @@ namespace mon3tr::render {
     public:
         explicit GpuStorage(const GpuStorageDesc& desc);
 
-        virtual ~GpuStorage() = default;
+        virtual ~GpuStorage();
 
         GpuStorage(const GpuStorage&) = delete;
 
@@ -127,6 +127,11 @@ namespace mon3tr::render {
         }
 
         ~StructuredGpuStorage() override = default;
+
+        Handle<Alloc> AllocateElements(const uint64 numElements) {
+            M3_ASSERT(numElements > 0);
+            return Allocate(numElements * sizeof(T));
+        }
 
         std::optional<ElementRange> QueryElementRange(const Handle<Alloc> handle) const {
             const std::optional<Range> rangeOpt = QueryRange(handle);
