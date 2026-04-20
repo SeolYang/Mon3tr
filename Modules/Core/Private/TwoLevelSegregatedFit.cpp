@@ -175,8 +175,11 @@ namespace mon3tr {
 
     const TwoLevelSegregatedFit::Block* TwoLevelSegregatedFit::Allocate(const uint64 size) {
         M3_ASSERT(size > 0);
-        MappedLevel level = Mapping(size);
+        if (size > initialBlockSize_) {
+            return nullptr;
+        }
 
+        MappedLevel level = Mapping(size);
         uint64 secondLevelBitmap = secondLevelBitmaps_[level.FirstLevel] & (~0Ui64 << level.SecondLevel);
         if (secondLevelBitmap == 0) {
             const uint64 firstLevelBitmap = firstLevelBitmap_ & (~0Ui64 << level.FirstLevel);
