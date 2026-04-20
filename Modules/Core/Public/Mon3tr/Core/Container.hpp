@@ -22,6 +22,7 @@
 #include <EASTL/vector.h>
 #include <EASTL/queue.h>
 #include <EASTL/array.h>
+#include <EASTL/stack.h>
 #include <Mon3tr/Core/Memory.hpp>
 #include <Mon3tr/Core/Allocator.hpp>
 
@@ -31,6 +32,9 @@ namespace mon3tr {
 
     template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
     using Queue = eastl::queue<T, eastl::deque<T, Allocator<C> > >;
+
+    template<typename T, MemoryCategory C = M3_MEM_CATEGORY(Unspecified)>
+    using Stack = eastl::stack<T, eastl::deque<T, Allocator<C> > >;
 
     template<typename T, size_t N>
     using Array = eastl::array<T, N>;
