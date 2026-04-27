@@ -45,6 +45,28 @@ namespace mon3tr::asset {
         std::is_enum_v<decltype(T::Import(payload))>;
     };
 
+    template<typename T>
+    concept MultipleAssetImporterTrait = requires(const AssetImportPayload<T>& payload)
+    {
+        // 임포터의 이름 (권장 사항: static constexpr)
+        std::is_same_v<std::string_view, decltype(T::kName)>;
+
+        // 임포터의 버전 (권장 사항: 호환되는 로더의 버전과 동일)
+        std::is_same_v<uint64, decltype(T::kVersion)>;
+
+        // 임포터 지정 임포트 설명자
+        typename T::Desc;
+        std::is_class_v<typename T::Desc>;
+
+        // 임포트 결과 열거자
+        typename T::EResult;
+        std::is_enum_v<typename T::EResult>;
+        T::EResult::Success;
+
+        // Import 함수 조건
+        std::is_same_v<Vector<typename T::EResult>, Vector<decltype(T::ImportMultiple(payload))> >;
+    };
+
 
     // @warning Asset Loader에 의해 할당되는 모든 에셋들은 Asset Memory Category에 대해 할당된다고 가정합니다.
     template<typename T>
@@ -66,6 +88,6 @@ namespace mon3tr::asset {
         T::EResult::Success;
 
         // 로드 함수 조건
-        std::is_same_v<decltype(T::Load(payload)), std::expected<class Asset*, typename T::EResult>>;
+        std::is_same_v<decltype(T::Load(payload)), std::expected<class Asset*, typename T::EResult> >;
     };
 }
