@@ -157,7 +157,7 @@ namespace mon3tr::asset {
 
             const Guid newGuid = xg::newGuid();
 
-            const fs::path newAssetBinaryPath = CreateBinaryPath(newGuid);
+            const fs::path newAssetBinaryPath = CreateAssetBinaryPath(newGuid);
             nlohmann::json metadataRoot{};
             using EResult = Importer::EResult;
             const EResult importResult = Importer::Import(AssetImportPayload<Importer>{
@@ -181,12 +181,71 @@ namespace mon3tr::asset {
             generalMetadata[kVersionMetadataJsonKey] = Importer::kVersion;
             metadataRoot[kGeneralMetadataJsonKey] = generalMetadata;
 
-            const fs::path newAssetMetadataPath = CreateMetadataPath(newGuid);
+            const fs::path newAssetMetadataPath = CreateAssetMetadataPath(newGuid);
             std::ofstream  assetMetadataStream{newAssetMetadataPath, std::ios::out | std::ios::trunc};
             assetMetadataStream << metadataRoot.dump();
             assetMetadataStream.close();
 
             return EAssetImportResult::Success;
+        }
+
+        // 하나의 원본 파일에서 여러개의 에셋이 파생되는 경우 (ex. Static Mesh)
+        template<MultipleAssetImporterTrait Importer>
+        Vector<EAssetImportResult> ImportMultiple(const AssetImportDesc& assetImportDesc, const Importer::Desc& importerDesc) {
+            Vector<EAssetImportResult> results;
+            if (assetImportDesc.RawFilePath.empty()) {
+                results.emplace_back(EAssetImportResult::EmptyRawFilePath);
+                return results;
+            }
+
+            if (!fs::exists(assetImportDesc.RawFilePath)) {
+                results.emplace_back(EAssetImportResult::RawFileDoesNotExist);
+                return results;
+            }
+
+            Vector<fs::path>       binaryPlaceholderPaths{};
+            Vector<nlohmann::json> metadataRoots{};
+            using EResult = Importer::EResult;
+            const Vector<EResult> importResults = Importer::ImportMultiple(AssetMultipleImportPayload<Importer>{
+                .ImportDesc = assetImportDesc,
+                .ImporterSpecificDesc = importerDesc,
+                .MetadataRoots = metadataRoots,
+                .PlaceholderGuid = CreateNewGuid(),
+                .PlaceholderBinaryPaths = binaryPlaceholderPaths
+            });
+
+            nlohmann::json generalMetadata;
+            generalMetadata[kLabelMetadataJsonKey] = assetImportDesc.Label;
+            generalMetadata[kVersionMetadataJsonKey] = Importer::kVersion;
+
+            M3_ASSERT(metadataRoots.size() == binaryPlaceholderPaths.size());
+            const uint64 numImportedAssets = metadataRoots.size();
+            M3_ASSERT(numImportedAssets > 0);
+            results.reserve(numImportedAssets);
+            for (uint64 idx = 0; idx < numImportedAssets; ++idx) {
+                if (importResults[idx] != EResult::Success) {
+                    M3_LOG(AssetManager, Error, "[{}] Failed to import asset {}. => {}", Importer::kName, assetImportDesc.RawFilePath.string(),
+                           magic_enum::enum_name(importResults[idx]));
+                    fs::remove(binaryPlaceholderPaths[idx]);
+                    results.emplace_back(EAssetImportResult::ImporterFailure);
+                } else if (!fs::exists(binaryPlaceholderPaths[idx])) {
+                    results.emplace_back(EAssetImportResult::AssetBinaryDoesNotExistAfterImport);
+                }
+
+                const Guid     newGuid = CreateNewGuid();
+                const fs::path newAssetBinaryPath = CreateAssetBinaryPath(newGuid);
+                fs::rename(binaryPlaceholderPaths[idx], newAssetBinaryPath);
+
+                metadataRoots[idx][kGeneralMetadataJsonKey] = generalMetadata;
+                const fs::path newAssetMetadataPath = CreateAssetMetadataPath(newGuid);
+                std::ofstream assetMetadataStream{newAssetMetadataPath, std::ios::out | std::ios::trunc};
+                assetMetadataStream << metadataRoots[idx].dump();
+                assetMetadataStream.close();
+
+                results.emplace_back(EAssetImportResult::Success);
+            }
+
+            return results;
         }
 
         template<AssetLoaderTrait Loader>
@@ -201,7 +260,7 @@ namespace mon3tr::asset {
             }
             //! Asset Table shared unlock
 
-            const fs::path metadataPath = CreateMetadataPath(assetLoadDesc.AssetGuid);
+            const fs::path metadataPath = CreateAssetMetadataPath(assetLoadDesc.AssetGuid);
             if (!fs::exists(metadataPath)) {
                 return std::unexpected{EAssetLoadResult::AssetMetadataDoesNotExist};
             }
@@ -227,7 +286,7 @@ namespace mon3tr::asset {
             std::expected<Asset*, EResult> expectedAsset = Loader::Load(AssetLoadPayload<Loader>{
                 .LoadDesc = assetLoadDesc,
                 .LoaderSpecificDesc = loaderDesc,
-                .AssetBinaryPath = CreateBinaryPath(assetLoadDesc.AssetGuid),
+                .AssetBinaryPath = CreateAssetBinaryPath(assetLoadDesc.AssetGuid),
                 .Label = label,
                 .MetadataRoot = metadataRoot,
             });
@@ -288,18 +347,6 @@ namespace mon3tr::asset {
 
         [[nodiscard]] GarbageBuffer& GetCurrentGarbageBuffer() noexcept { return garbageBuffers_[garbageCollectCounter_ % kNumGarbageBuffer]; }
         [[nodiscard]] GarbageBuffer& GetNextGarbageBuffer() noexcept { return garbageBuffers_[(garbageCollectCounter_ + 1) % kNumGarbageBuffer]; }
-
-        static fs::path CreateBinaryPath(const Guid& guid) {
-            M3_ASSERT(guid.isValid());
-            constexpr std::string_view kAssetBinaryPathFormat = "Assets\\{}.m3tr";
-            return std::format(kAssetBinaryPathFormat, guid.str());
-        }
-
-        static fs::path CreateMetadataPath(const Guid& guid) {
-            M3_ASSERT(guid.isValid());
-            constexpr std::string_view kAssetMetadataPathFormat = "Assets\\{}.m3mt";
-            return std::format(kAssetMetadataPathFormat, guid.str());
-        }
 
     private:
         mutable std::shared_mutex                           assetTableMutex_;
