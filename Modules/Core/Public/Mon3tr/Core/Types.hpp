@@ -36,6 +36,7 @@ namespace mon3tr {
     using f64 = double;
 
     using Guid = xg::Guid;
+    inline Guid CreateNewGuid() { return xg::newGuid(); }
 
     namespace math = DirectX::SimpleMath;
 }
