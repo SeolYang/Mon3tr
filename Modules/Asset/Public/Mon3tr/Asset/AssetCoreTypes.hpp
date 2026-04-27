@@ -20,6 +20,7 @@
  */
 #pragma once
 #include <Mon3tr/Core/CoreMinimal.hpp>
+#include <Mon3tr/Asset/AssetUtils.hpp>
 
 namespace mon3tr::asset {
     class Asset;
@@ -49,6 +50,31 @@ namespace mon3tr::asset {
         nlohmann::json& MetadataRoot;
 
         const fs::path& AssetBinaryPath;
+    };
+
+    template<typename Importer>
+    struct AssetMultipleImportPayload {
+    public:
+        const AssetImportDesc& ImportDesc;
+        const Importer::Desc&  ImporterSpecificDesc;
+
+        Vector<nlohmann::json>& MetadataRoots;
+        xg::Guid PlaceholderGuid{};
+        Vector<fs::path>& BinaryPlaceholderPaths;
+
+    public:
+        // Importer 내부에서 에셋의 총 개수를 확정짓는데 사용되어야함.
+        void SetNumAssets(const uint64 numAssets) {
+            M3_ASSERT(PlaceholderGuid.isValid());
+            M3_ASSERT(numAssets > 0);
+
+            MetadataRoots.resize(numAssets);
+            BinaryPlaceholderPaths.resize(numAssets);
+            for (uint64 idx = 0; idx < numAssets; ++idx) {
+                BinaryPlaceholderPaths[idx] = CreateAssetBinaryPlaceholderPath(PlaceholderGuid, idx);
+            }
+        }
+
     };
 
     struct AssetLoadDesc {
