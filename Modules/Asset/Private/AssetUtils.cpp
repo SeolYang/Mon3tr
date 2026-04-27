@@ -18,11 +18,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
-#include <Mon3tr/Core/Memory.hpp>
-#include <Mon3tr/Asset/AssetCoreTypes.hpp>
-#include <Mon3tr/Asset/AssetTypeTraits.hpp>
 #include <Mon3tr/Asset/AssetUtils.hpp>
 
-M3_DECLARE_MEM_CATEGORY(Asset);
+namespace mon3tr::asset {
+    fs::path CreateAssetBinaryPath(const Guid& guid) {
+        M3_ASSERT(guid.isValid());
+        constexpr std::string_view kAssetBinaryPathFormat = "Assets\\{}.m3tr";
+        return std::format(kAssetBinaryPathFormat, guid.str());
+    }
 
+    fs::path CreateAssetMetadataPath(const Guid& guid) {
+        M3_ASSERT(guid.isValid());
+        constexpr std::string_view kAssetMetadataPathFormat = "Assets\\{}.m3mt";
+        return std::format(kAssetMetadataPathFormat, guid.str());
+    }
+
+    fs::path CreateAssetBinaryPlaceholderPath(const Guid& guid, const uint64 idx) {
+        M3_ASSERT(guid.isValid());
+        constexpr std::string_view kAssetPlaceholderBinaryPathFormat = "Assets\\Placeholders\\{}_{}.m3ph";
+        return std::format(kAssetPlaceholderBinaryPathFormat, guid.str(), idx);
+    }
+}

@@ -10,10 +10,12 @@ target_include_directories(
 
 set(Mon3trAssetPrivate
         Private/AssetMinimal.cpp
+        Private/AssetUtils.cpp
         Private/AssetManager.cpp)
 set(Mon3trAssetPublic
         Public/Mon3tr/Asset/AssetCoreTypes.hpp
         Public/Mon3tr/Asset/AssetTypeTraits.hpp
+        Public/Mon3tr/Asset/AssetUtils.hpp
         Public/Mon3tr/Asset/AssetMinimal.hpp
         Public/Mon3tr/Asset/Asset.hpp
         Public/Mon3tr/Asset/AssetManager.hpp)

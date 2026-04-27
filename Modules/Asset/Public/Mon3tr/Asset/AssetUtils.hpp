@@ -19,10 +19,12 @@
  * SOFTWARE.
  */
 #pragma once
-#include <Mon3tr/Core/Memory.hpp>
-#include <Mon3tr/Asset/AssetCoreTypes.hpp>
-#include <Mon3tr/Asset/AssetTypeTraits.hpp>
-#include <Mon3tr/Asset/AssetUtils.hpp>
+#include <Mon3tr/Core/CoreMinimal.hpp>
 
-M3_DECLARE_MEM_CATEGORY(Asset);
+namespace mon3tr::asset {
+    extern fs::path CreateAssetBinaryPath(const Guid& guid);
 
+    extern fs::path CreateAssetMetadataPath(const Guid& guid);
+
+    extern fs::path CreateAssetBinaryPlaceholderPath(const Guid& guid, const uint64 idx);
+}
