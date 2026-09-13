@@ -31,13 +31,23 @@ namespace mon3tr::render {
         this->swapChain_ = dependency.SwapChainInstance;
         M3_ASSERT(swapChain_->GetBackBufferCount() <= kMaxDeferredDeletionQueues);
 
-        bindlessLayout_ = renderDevice_->createBindlessLayout(nvrhi::BindlessLayoutDesc{
+        nvrhi::BindingLayoutHandle bindlessLayout = renderDevice_->createBindlessLayout(nvrhi::BindlessLayoutDesc{
             .visibility = nvrhi::ShaderType::All,
             .firstSlot = 0,
             .maxCapacity = desc.NumDescriptors,
             .layoutType = nvrhi::BindlessLayoutDesc::LayoutType::MutableSrvUavCbv
         });
-        descriptorTable_ = renderDevice_->createDescriptorTable(bindlessLayout_.Get());
+        if (bindlessLayout_ == nullptr) {
+            return EDescriptorManagerInitializeResult::FailedToCreateBindlessLayout;
+        }
+
+        nvrhi::DescriptorTableHandle descriptorTable = renderDevice_->createDescriptorTable(bindlessLayout_.Get());
+        if (descriptorTable_ == nullptr) {
+            return EDescriptorManagerInitializeResult::FailedToCreateDescriptorTable;
+        }
+
+        bindlessLayout_ = std::move(bindlessLayout);
+        descriptorTable_ = std::move(descriptorTable);
 
         for (uint32 slotIdx = desc.NumDescriptors; slotIdx > 0; --slotIdx) {
             slotPool_.push(slotIdx - 1);
@@ -47,6 +57,7 @@ namespace mon3tr::render {
         slotUsed_.resize(desc.NumDescriptors);
 #endif
 
+        M3_ASSERT(bindlessLayout_ != nullptr && descriptorTable_ != nullptr);
         MarkAsInitialized();
         return EDescriptorManagerInitializeResult::Success;
     }

@@ -34,6 +34,8 @@ namespace mon3tr::render {
 
     enum class EDescriptorManagerInitializeResult : uint8 {
         Success,
+        FailedToCreateBindlessLayout,
+        FailedToCreateDescriptorTable,
     };
 
     enum class EDescriptorCreateResult : uint8 {

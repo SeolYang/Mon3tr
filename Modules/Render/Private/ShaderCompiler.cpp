@@ -154,20 +154,23 @@ namespace mon3tr::render {
             .Encoding = codePage
         };
         nvrhi::RefCountPtr<IDxcResult> dxcResult;
-        dxcCompiler->Compile(
+        const HRESULT                  compileResult = dxcCompiler->Compile(
             &dxcBuffer,
             arguments.data(), static_cast<uint32>(arguments.size()),
             dxcIncludeHandler.Get(),
             IID_PPV_ARGS(&dxcResult));
         nvrhi::RefCountPtr<IDxcBlobUtf8> errorMessage;
-        if (SUCCEEDED(dxcResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errorMessage.GetAddressOf()), nullptr))) {
+        if (FAILED(compileResult) || SUCCEEDED(dxcResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errorMessage.GetAddressOf()), nullptr))) {
             if (errorMessage && errorMessage->GetStringLength() > 0) {
                 M3_LOG(ShaderCompiler, Error, "Failed to compile shader from {}. Reasons: {}",
                        payload.ImportDesc.RawFilePath.string(),
                        errorMessage->GetStringPointer());
-
-                return EResult::FailedToCompileShader;
+            } else {
+                M3_LOG(ShaderCompiler, Error, "Failed to compile shader from {}. Reasons: Unknown",
+                       payload.ImportDesc.RawFilePath.string());
             }
+
+            return EResult::FailedToCompileShader;
         }
 
         nvrhi::RefCountPtr<IDxcBlob> compiledShaderBlob;
