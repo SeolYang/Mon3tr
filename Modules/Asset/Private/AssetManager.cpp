@@ -35,6 +35,10 @@ namespace mon3tr::asset {
     }
 
     AssetHandle& AssetHandle::operator=(const AssetHandle& rhs) {
+        if (this == &rhs) {
+            return *this;
+        }
+
         assetManager_ = rhs.assetManager_;
         handle_ = rhs.handle_;
 

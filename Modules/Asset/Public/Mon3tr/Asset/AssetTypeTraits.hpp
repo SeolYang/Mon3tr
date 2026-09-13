@@ -67,7 +67,6 @@ namespace mon3tr::asset {
         std::is_same_v<Vector<typename T::EResult>, Vector<decltype(T::ImportMultiple(payload))> >;
     };
 
-
     // @warning Asset Loader에 의해 할당되는 모든 에셋들은 Asset Memory Category에 대해 할당된다고 가정합니다.
     template<typename T>
     concept AssetLoaderTrait = requires(const AssetLoadPayload<T>& payload)
