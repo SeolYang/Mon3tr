@@ -52,6 +52,8 @@ namespace mon3tr::asset {
     }
 
     AssetHandle& AssetHandle::operator=(AssetHandle&& rhs) noexcept {
+        Destruct();
+        
         assetManager_ = std::exchange(rhs.assetManager_, nullptr);
         handle_ = std::exchange(rhs.handle_, Handle<Asset*>{});
         return *this;
