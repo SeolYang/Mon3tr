@@ -58,7 +58,7 @@ namespace mon3tr {
     }
 
     TwoLevelSegregatedFit::MappedLevel TwoLevelSegregatedFit::Mapping(const uint64 size) {
-        const uint64 f = CalculateMostSignificantBitIndex(size);
+        const uint64                  f = CalculateMostSignificantBitIndex(size);
         [[maybe_unused]] const uint64 frhs = 1Ui64 << f;
         return MappedLevel{
             .FirstLevel = f,
@@ -179,19 +179,44 @@ namespace mon3tr {
             return nullptr;
         }
 
-        MappedLevel level = Mapping(size);
-        uint64 secondLevelBitmap = secondLevelBitmaps_[level.FirstLevel] & (~0Ui64 << level.SecondLevel);
+        const uint64 firstLevel = CalculateMostSignificantBitIndex(size);
+
+        const uint64 binWidth = firstLevel >= secondLevelIndex_
+                                    ? (1Ui64 << (firstLevel - secondLevelIndex_))
+                                    : (1Ui64 << firstLevel);
+
+        const uint64 rounding = binWidth - 1;
+        if (size > std::numeric_limits<uint64>::max() - rounding) {
+            return nullptr;
+        }
+
+        MappedLevel level = Mapping(size + rounding);
+        if (level.FirstLevel >= secondLevelBitmaps_.size()) {
+            return nullptr;
+        }
+
+        uint64 secondLevelBitmap =
+                secondLevelBitmaps_[level.FirstLevel] & (~0Ui64 << level.SecondLevel);
+
         if (secondLevelBitmap == 0) {
-            const uint64 firstLevelBitmap = firstLevelBitmap_ & (~0Ui64 << level.FirstLevel);
-            if (firstLevelBitmap == 0) {
+            if (level.FirstLevel >= 63Ui64) {
                 return nullptr;
             }
 
-            level.FirstLevel = std::countr_zero(firstLevelBitmap);
+            const uint64 candidates =
+                    firstLevelBitmap_ & (~0Ui64 << (level.FirstLevel + 1));
+
+            if (candidates == 0) {
+                return nullptr;
+            }
+
+            level.FirstLevel = std::countr_zero(candidates);
             secondLevelBitmap = secondLevelBitmaps_[level.FirstLevel];
         }
+
         M3_ASSERT(secondLevelBitmap != 0);
         level.SecondLevel = std::countr_zero(secondLevelBitmap);
+        M3_ASSERT(level.SecondLevel < numSecondLevelSubdivisions_);
 
         const uint64 freeListIdx = level.GetFreeListIndex(numSecondLevelSubdivisions_);
         M3_ASSERT(freeListIdx < freeLists_.size());
@@ -224,6 +249,8 @@ namespace mon3tr {
             InsertToFreeList(splitBlock);
         }
 
+        M3_ASSERT(freeBlock != nullptr);
+        M3_ASSERT(freeBlock->Size > 0 && freeBlock->Size == size);
         freeBlock->bIsFree = false;
         allocatedSize_ += size;
         return freeBlock;
