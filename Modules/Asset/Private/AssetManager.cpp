@@ -39,6 +39,8 @@ namespace mon3tr::asset {
             return *this;
         }
 
+        Destruct();
+
         assetManager_ = rhs.assetManager_;
         handle_ = rhs.handle_;
 
