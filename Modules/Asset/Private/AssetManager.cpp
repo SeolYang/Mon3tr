@@ -172,7 +172,7 @@ namespace mon3tr::asset {
         }
 
         M3_ASSERT(asset != nullptr);
-        if (bShouldIgnoreZeroRefCount && asset->refCounter_ == 0) {
+        if (!bShouldIgnoreZeroRefCount && asset->refCounter_ == 0) {
             return nullptr;
         }
 

@@ -37,12 +37,12 @@ namespace mon3tr::render {
             .maxCapacity = desc.NumDescriptors,
             .layoutType = nvrhi::BindlessLayoutDesc::LayoutType::MutableSrvUavCbv
         });
-        if (bindlessLayout_ == nullptr) {
+        if (bindlessLayout == nullptr) {
             return EDescriptorManagerInitializeResult::FailedToCreateBindlessLayout;
         }
 
         nvrhi::DescriptorTableHandle descriptorTable = renderDevice_->createDescriptorTable(bindlessLayout_.Get());
-        if (descriptorTable_ == nullptr) {
+        if (descriptorTable == nullptr) {
             return EDescriptorManagerInitializeResult::FailedToCreateDescriptorTable;
         }
 
