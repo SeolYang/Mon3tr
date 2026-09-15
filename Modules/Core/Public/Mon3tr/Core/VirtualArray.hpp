@@ -37,15 +37,17 @@ namespace mon3tr {
         }
 
         VirtualArray(const VirtualArray& other) {
-            sizeOfReservedMemBytes_ = other.sizeOfReservedMemBytes_;
-            data_ = static_cast<T*>(VirtualMemory::Reserve(sizeOfReservedMemBytes_));
-            maxCapacity_ = other.maxCapacity_;
-            sizeOfCommitedMemBytes_ = other.sizeOfCommitedMemBytes_;
-            VirtualMemory::Commit(data_, sizeOfCommitedMemBytes_);
-            numElements_ = other.numElements_;
+            data_ = static_cast<T*>(VirtualMemory::Reserve(other.sizeOfReservedMemBytes_));
 
-            for (uint64 idx = 0; idx < numElements_; ++idx) {
-                std::construct_at(&data_[idx], other.data_[idx]);
+            if (data_ != nullptr) {
+                sizeOfReservedMemBytes_ = other.sizeOfCommitedMemBytes_;
+                maxCapacity_ = other.maxCapacity_;
+                sizeOfCommitedMemBytes_ = other.sizeOfCommitedMemBytes_;
+                numElements_ = other.numElements_;
+                VirtualMemory::Commit(data_, sizeOfCommitedMemBytes_);
+                for (uint64 idx = 0; idx < numElements_; ++idx) {
+                    std::construct_at(&data_[idx], other.data_[idx]);
+                }
             }
         }
 
