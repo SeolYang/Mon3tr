@@ -92,6 +92,7 @@ namespace mon3tr::render {
         }
 
         textures_.emplace_back(desc);
+        textures_.back().Desc.keepInitialState = false;
         return RGTextureHandle{
             .Index = static_cast<uint32>(textures_.size() - 1),
             .Version = 0
@@ -104,39 +105,50 @@ namespace mon3tr::render {
         }
 
         buffers_.emplace_back(desc);
+        buffers_.back().Desc.keepInitialState = false;
         return RGBufferHandle{
             .Index = static_cast<uint32>(buffers_.size() - 1),
             .Version = 0
         };
     }
 
-    RGTextureHandle RenderGraphScheduler::CreateExternalTexture(nvrhi::TextureHandle texture) {
+    RGTextureHandle RenderGraphScheduler::CreateExternalTexture(const nvrhi::TextureHandle& texture) {
         M3_PRE_COND(texture != nullptr);
 
         // 외부 리소스에 대해서는 현재 노드가 비활성화 되어있더라도 새로운 핸들을 만들어주지 않을 이유가 없음.
         textures_.emplace_back(
             internal::RGSTexture{
                 .Desc = texture->getDesc(),
-                .ExternalResource = std::move(texture)
+                .ExternalResource = texture
             });
-        return RGTextureHandle{
+
+        // External Texture를 등록한 패스(노드)에서 해당 텍스처를 생성 및 Write 하는 것으로 취급
+        // (실제 상태가 Read/Write 인지와는 무관하게)
+        const auto newExternalTextureHandle = RGTextureHandle{
             .Index = static_cast<uint32>(textures_.size() - 1),
             .Version = 0
         };
+
+        return WriteTo(textures_, newExternalTextureHandle, texture->getDesc().initialState);
     }
 
-    RGBufferHandle RenderGraphScheduler::CreateExternalBuffer(nvrhi::BufferHandle buffer) {
+    RGBufferHandle RenderGraphScheduler::CreateExternalBuffer(const nvrhi::BufferHandle& buffer) {
         M3_PRE_COND(buffer != nullptr);
 
         buffers_.emplace_back(
             internal::RGSBuffer{
                 .Desc = buffer->getDesc(),
-                .ExternalResource = std::move(buffer)
+                .ExternalResource = buffer
             });
-        return RGBufferHandle{
+
+        // External Buffer를 등록한 패스(노드)에서 해당 버퍼를 생성 및 Write 하는 것으로 취급
+        // (실제 상태가 Read/Write 인지와는 무관하게)
+        const auto newExternalBufferHandle = RGBufferHandle{
             .Index = static_cast<uint32>(buffers_.size() - 1),
             .Version = 0
         };
+
+        return WriteTo(textures_, newExternalBufferHandle, buffer->getDesc().initialState);
     }
 
     RGTextureHandle RenderGraphScheduler::WriteTexture(const RGTextureHandle texture, const nvrhi::ResourceStates state) {
@@ -310,12 +322,14 @@ namespace mon3tr::render {
             return true;
         }
 
-        nodeDepths[nodeIdx] = (nodeDepths[nodeIdx] == internal::kRGSInvalidDepth) ? depth : std::max(nodeDepths[nodeIdx], depth);
-        maxNodeDepth = std::max(maxNodeDepth, depth);
-
-        if (visited[nodeIdx]) {
+        const uint16 currentDepth = nodeDepths[nodeIdx];
+        if (currentDepth != internal::kRGSInvalidDepth && depth <= currentDepth) {
+            M3_ASSERT(visited[nodeIdx]);
             return true;
         }
+
+        nodeDepths[nodeIdx] = (nodeDepths[nodeIdx] == internal::kRGSInvalidDepth) ? depth : std::max(nodeDepths[nodeIdx], depth);
+        maxNodeDepth = std::max(maxNodeDepth, depth);
 
         auto VisitSubsequentNodes = [&](const auto& handles, auto& resourceContainer) {
             for (const auto handle: handles) {
@@ -691,19 +705,21 @@ namespace mon3tr::render {
                             nvrhi::CommandQueue::Graphics);
 
                         //< Submit the Current Depth's Async Compute Workload (wait for the state transitions on graphics queue)
-                        if (depthInfoToSubmit.ShouldAsyncComputeWaitStateTransitions()) {
-                            M3_ASSERT(!depthToSubmit.AsyncComputeCmdLists.empty());
-                            M3_ASSERT(stateTransitionSyncPoint != internal::RGDepth::InvalidSyncPoint);
-                            renderDevice_->queueWaitForCommandList(
-                                nvrhi::CommandQueue::Compute,
-                                nvrhi::CommandQueue::Graphics,
-                                stateTransitionSyncPoint);
+                        if (depthInfoToSubmit.HasAnyAsyncComputeWorkload()) {
+                            if (stateTransitionSyncPoint != internal::RGDepth::InvalidSyncPoint) {
+                                renderDevice_->queueWaitForCommandList(
+                                    nvrhi::CommandQueue::Compute,
+                                    nvrhi::CommandQueue::Graphics,
+                                    stateTransitionSyncPoint);
+                            }
+
                             depthToSubmit.AsyncComputeSyncPoint = renderDevice_->executeCommandLists(
                                 depthToSubmit.AsyncComputeCmdListsToSubmit.data(),
                                 depthToSubmit.AsyncComputeCmdListsToSubmit.size(),
                                 nvrhi::CommandQueue::Compute);
                         }
                     });
+
             depthSubmissionTask.depends_on(depthExecutionSystem);
             depthSubmissionTasks_.emplace_back(depthSubmissionTask);
         }

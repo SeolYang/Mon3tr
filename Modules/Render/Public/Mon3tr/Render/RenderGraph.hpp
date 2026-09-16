@@ -149,7 +149,7 @@ namespace mon3tr::internal {
 
     private:
         template<typename T>
-        [[nodiscard]] bool HasAnyResourceDependency(const T handle, const Vector<T, M3_MEM_CATEGORY(Render)>& container) const {
+        [[nodiscard]] static bool HasAnyResourceDependency(const T handle, const Vector<T, M3_MEM_CATEGORY(Render)>& container) const {
             return std::ranges::find_if(container.cbegin(), container.cend(),
                                         [handle](const T& target) {
                                             return target.Index == handle.Index;
@@ -191,10 +191,7 @@ namespace mon3tr::internal {
         // 깊이 1에서 이미 깊이 0의 Async Compute Write Pass에 동기화가 완료된 시점이므로, 깊이 2에서 다시 깊이 0에 동기화 할 필요가 없다.
         // 여러 Depth의 Async Compute Workload에 걸쳐 리소스를 사용하더라도, 가장 마지막 Async Compute Workload에 대해서만 동기화가 필요함
         uint16 TargetDepthToWaitAsyncCompute = internal::kRGSInvalidDepth;
-        // 만약, 해당 패스가 읽거나/쓰는 리소스 버전 중 하나라도 AsyncCompute 에서 실행되고, 해당 버전의 최소 깊이가 현재 Depth와 동일하다면
-        // Async Compute가 graphics queue에서 실행되는 wait 연산을 기다려야함.
-        //bool               bShouldAsyncComputeWait = false; ///< 해당 Depth 내 어떤 패스가 Async Compute에 작업을 제출 하는가?
-        [[nodiscard]] bool ShouldAsyncComputeWaitStateTransitions() const noexcept { return !AsyncComputeWorkloadNodes.empty(); }
+        [[nodiscard]] bool HasAnyAsyncComputeWorkload() const noexcept { return !AsyncComputeWorkloadNodes.empty(); }
     };
 
 
@@ -242,9 +239,11 @@ namespace mon3tr::render {
 
         [[nodiscard]] RGBufferHandle CreateBuffer(const nvrhi::BufferDesc& desc);
 
-        [[nodiscard]] RGTextureHandle CreateExternalTexture(nvrhi::TextureHandle texture);
+        // 텍스처가 생성되는 시점에 설정된 initial state를 기준으로 첫 상태를 설정함
+        [[nodiscard]] RGTextureHandle CreateExternalTexture(const nvrhi::TextureHandle& texture);
 
-        [[nodiscard]] RGBufferHandle CreateExternalBuffer(nvrhi::BufferHandle buffer);
+        // 버퍼가 생성되는 시점에 설정된 initial state를 기준으로 첫 상태를 설정함
+        [[nodiscard]] RGBufferHandle CreateExternalBuffer(const nvrhi::BufferHandle& buffer);
 
         [[nodiscard]] RGTextureHandle WriteTexture(RGTextureHandle texture, nvrhi::ResourceStates state);
 
