@@ -149,7 +149,7 @@ namespace mon3tr::internal {
 
     private:
         template<typename T>
-        [[nodiscard]] static bool HasAnyResourceDependency(const T handle, const Vector<T, M3_MEM_CATEGORY(Render)>& container) const {
+        [[nodiscard]] static bool HasAnyResourceDependency(const T handle, const Vector<T, M3_MEM_CATEGORY(Render)>& container) {
             return std::ranges::find_if(container.cbegin(), container.cend(),
                                         [handle](const T& target) {
                                             return target.Index == handle.Index;
